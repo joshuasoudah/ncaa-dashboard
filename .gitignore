@@ -5,3 +5,4 @@ agent-tools/
 uploads/
 .wrangler-dry-run/
 .wrangler/
+pages-dist/

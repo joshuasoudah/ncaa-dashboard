@@ -180,4 +180,7 @@ test("shell uses the standings navy and red and does not call ESPN itself", () =
   assert.match(css, /var\(--stroke/);
   assert.match(html, /FBS Board/);
   assert.equal(html.includes("free data plan"), false);
+  const config = fs.readFileSync(new URL("../fbs-config.js", import.meta.url), "utf8");
+  assert.match(config, /https:\/\/fbs-board-data\.josh-soudah\.workers\.dev/);
+  assert.match(app, /hostname === "localhost"/);
 });

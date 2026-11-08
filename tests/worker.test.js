@@ -10,7 +10,10 @@ test("the worker entry delegates to the handler and does not proxy raw URLs", ()
   assert.match(entry, /export default/);
   assert.match(entry, /async fetch/);
   assert.match(config, /"compatibility_date": "2026-11-08"/);
-  assert.match(config, /"workers_dev": false/);
+  assert.match(config, /"workers_dev": true/);
+  assert.match(config, /https:\/\/joshuasoudah\.github\.io/);
+  assert.match(entry, /globalThis\.fetch/);
+  assert.equal(entry.includes("fixture"), false);
   assert.equal(config.includes("d1"), false);
   assert.equal(config.includes("kv_namespaces"), false);
   assert.equal(config.includes("cron"), false);

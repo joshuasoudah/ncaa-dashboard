@@ -4,7 +4,7 @@
   "main": "src/index.js",
   "compatibility_date": "2026-11-08",
   "compatibility_flags": ["nodejs_compat"],
-  "workers_dev": false,
+  "workers_dev": true,
   "preview_urls": false,
   "observability": {
     "enabled": true,
@@ -12,9 +12,8 @@
       "enabled": true
     }
   },
-  // Set this to the future GitHub Pages origin before any deploy.
-  // An empty value rejects every browser Origin. Requests with no Origin still run.
+  // Intended browser origin. Not proof this Worker is deployed.
   "vars": {
-    "ALLOWED_ORIGIN": ""
+    "ALLOWED_ORIGIN": "https://joshuasoudah.github.io"
   }
 }

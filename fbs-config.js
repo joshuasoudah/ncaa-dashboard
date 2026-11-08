@@ -1,3 +1,3 @@
-// Point apiBase at the college Worker origin before a future deploy.
-// Leave it empty to stay disconnected. This file is not a secret.
-globalThis.FBS_CONFIG = { apiBase: "" };
+// Intended college Worker. This file does not mean the Worker is already deployed.
+// GitHub Pages will call this origin. Captured snapshots are not loaded from here.
+globalThis.FBS_CONFIG = { apiBase: "https://fbs-board-data.josh-soudah.workers.dev" };
