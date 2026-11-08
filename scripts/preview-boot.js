@@ -68,11 +68,16 @@ function render() {
     session,
     snapshot,
     theme: resolvedTheme(),
+    themeChoice: prefs.theme || "system",
     reduceMotion: resolvedMotion(),
     autoRefresh: prefs.autoRefresh !== false,
+    serviceConnected: false,
+    hidden: document.hidden,
     status,
   });
   syncMotionControl(root, resolvedMotion());
+  const settings = root.querySelector("#settings");
+  if (settings?.showModal && session.dialog === "settings" && !settings.open) settings.showModal();
   if (focusDialog) {
     focusDialog = false;
     root.querySelector("[data-action='close-dialog']")?.focus();
@@ -114,12 +119,10 @@ document.getElementById("app").addEventListener("click", (event) => {
   if (action === "theme") {
     prefs.theme = resolvedTheme() === "dark" ? "light" : "dark";
     savePrefs();
-  } else if (action === "auto-refresh") {
-    prefs.autoRefresh = prefs.autoRefresh === false;
-    savePrefs();
-    refreshLoop.start();
   } else if (action === "live-only") {
     session.liveOnly = !session.liveOnly;
+  } else if (action === "settings") {
+    session.dialog = "settings";
   } else if (action === "refresh") {
     onRefresh();
     return;
@@ -158,10 +161,21 @@ document.getElementById("app").addEventListener("change", (event) => {
   if (action === "season") session.season = target.value;
   else if (action === "ranking-view") session.rankingView = target.value;
   else if (action === "conference") session.conference = target.value;
+  else if (action === "division") session.division = target.value;
   else if (action === "phase") session.phase = target.value;
   else if (action === "poll-week") session.pollWeek = target.value;
   else if (action === "game-week") session.gameWeek = target.value;
-  else if (action === "reduce-motion") {
+  else if (action === "auto-refresh") {
+    prefs.autoRefresh = target.checked;
+    savePrefs();
+    render();
+    return;
+  } else if (action === "theme-choice") {
+    prefs.theme = target.value;
+    savePrefs();
+    render();
+    return;
+  } else if (action === "reduce-motion") {
     prefs.reduceMotion = target.checked;
     savePrefs();
     render();
@@ -169,7 +183,6 @@ document.getElementById("app").addEventListener("change", (event) => {
   } else {
     return;
   }
-  resetPanels();
   render();
 });
 
@@ -199,8 +212,11 @@ window.addEventListener("pageshow", (event) => {
 
 const params = new URLSearchParams(location.search);
 if (params.get("theme") === "light" || params.get("theme") === "dark") prefs.theme = params.get("theme");
-if (params.get("view") === "games") session.mainTab = "games";
-else if (params.get("view") === "rankings") session.mainTab = "rankings";
+if (params.get("view") === "games") {
+  session.rankingView = "ap";
+  session.openTeamId = params.get("openTeam") || "333";
+  session.teamTab = "games";
+} else if (params.get("view") === "rankings") session.mainTab = "rankings";
 if (["power", "ap", "coaches", "cfp"].includes(params.get("view"))) {
   session.mainTab = "rankings";
   session.rankingView = params.get("view");

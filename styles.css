@@ -98,6 +98,16 @@ h1, h2, h3, .head, .tab, .section-title, .stat-label, .live-state, .rank-badge {
 button, summary, a, input, select { touch-action: manipulation; }
 button, input, select { font: inherit; color: inherit; }
 button { cursor: pointer; }
+.skip {
+  position: absolute;
+  left: 12px;
+  top: -48px;
+  background: var(--nfl-red);
+  color: #fff;
+  padding: 8px 12px;
+  z-index: 6;
+}
+.skip:focus { top: 8px; }
 .sr-only {
   position: absolute;
   width: 1px;
