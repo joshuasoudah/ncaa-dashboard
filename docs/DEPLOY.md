@@ -33,7 +33,7 @@ Check without deploying:
 ```bash
 npm install
 npm test
-cd worker && npx wrangler deploy --dry-run --outdir ../.wrangler-dry-run
+npx wrangler deploy --dry-run --config worker/wrangler.jsonc --outdir .wrangler-dry-run
 ```
 
 ## Pages

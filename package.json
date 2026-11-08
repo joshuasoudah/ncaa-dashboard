@@ -10,7 +10,8 @@
     "start": "node server.mjs"
   },
   "devDependencies": {
-    "linkedom": "^0.18.12"
+    "linkedom": "^0.18.12",
+    "wrangler": "^4.158.0"
   },
   "engines": {
     "node": ">=22"
