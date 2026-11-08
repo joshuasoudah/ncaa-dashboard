@@ -170,7 +170,7 @@ export function acceptRenderable(payload) {
   if (payload.synthetic === false && payload.fixtureClass === "public-espn-capture" && payload.provider === "espn") {
     return { ok: true, mode: "capture" };
   }
-  if (payload.synthetic === false && payload.source === "normalized-server-snapshot" && payload.state) {
+  if (payload.synthetic === false && (payload.source === "normalized-server-snapshot" || payload.source === "fbs-board-service") && payload.state) {
     return { ok: true, mode: "server" };
   }
   if (payload.state === "disconnected") return { ok: true, mode: "disconnected" };

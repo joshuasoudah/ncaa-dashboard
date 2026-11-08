@@ -1,7 +1,7 @@
 /* Scope stays on this app. Never delete caches that belong to another board. */
 const CACHE = "fbs-board-shell-v1";
 const CACHE_PREFIX = "fbs-board-";
-const SHELL = ["./index.html", "./styles.css", "./app.js", "./manifest.webmanifest", "./icon.svg"];
+const SHELL = ["./index.html", "./styles.css", "./app.js", "./fbs-config.js", "./manifest.webmanifest", "./icon.svg"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting()));

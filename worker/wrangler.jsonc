@@ -1,0 +1,20 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "fbs-board-data",
+  "main": "src/index.js",
+  "compatibility_date": "2026-11-08",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "preview_urls": false,
+  "observability": {
+    "enabled": true,
+    "traces": {
+      "enabled": true
+    }
+  },
+  // Set this to the future GitHub Pages origin before any deploy.
+  // An empty value rejects every browser Origin. Requests with no Origin still run.
+  "vars": {
+    "ALLOWED_ORIGIN": ""
+  }
+}

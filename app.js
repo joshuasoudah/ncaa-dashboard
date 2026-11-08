@@ -1,11 +1,21 @@
-import { PREF_KEY } from "./src/config.js";
+import { DEFAULT_SEASON, PREF_KEY } from "./src/config.js";
 import { createRefreshLoop } from "./src/live/refresh.js";
 import { acceptRenderable } from "./src/normalize/snapshot.js";
-import { createSession, reopen } from "./src/ui/session.js";
+import { assertApiBase, getView } from "./src/service/client.js";
+import { createSession, reopen, resolveSeason } from "./src/ui/session.js";
 import { renderApp, syncMotionControl } from "./src/ui/render.js";
 
 const FIXTURE_URL = new URL("./fixtures/espn/snapshot.json", import.meta.url);
-let serviceBase = null;
+
+function configuredBase() {
+  try {
+    return assertApiBase(globalThis.FBS_CONFIG?.apiBase || "");
+  } catch {
+    return "";
+  }
+}
+
+let serviceBase = configuredBase();
 const session = createSession();
 let snapshot = null;
 let status = "";
@@ -110,11 +120,76 @@ async function loadFixtures() {
   }
 }
 
-function onRefresh() {
-  if (serviceBase) {
-    status = "A scoreboard service is configured. This draft's static server does not call ESPN from Refresh.";
-  } else if (!snapshot) status = "No stored snapshot. Refresh does not contact ESPN.";
-  else status = "Reloaded the stored snapshot. ESPN was not contacted.";
+function currentSeason() {
+  return resolveSeason(session, snapshot, DEFAULT_SEASON);
+}
+
+function currentWeek() {
+  if (session.pollWeek && session.pollWeek !== "latest") {
+    const week = Number(session.pollWeek);
+    if (week >= 1 && week <= 20) return week;
+  }
+  const weeks = Object.keys(snapshot?.polls?.[currentSeason()] || {}).map(Number).filter((week) => week >= 1);
+  return weeks.length ? Math.max(...weeks) : 10;
+}
+
+async function onRefresh(manual = true) {
+  if (!serviceBase) {
+    if (!snapshot) status = "No stored snapshot. Refresh does not contact ESPN.";
+    else status = snapshot.source === "fbs-board-service"
+      ? "No scoreboard service is configured."
+      : "Reloaded the stored snapshot. ESPN was not contacted.";
+    render();
+    return;
+  }
+  if (manual || !snapshot) status = "Checking the scoreboard service…";
+  render();
+  const keptTeam = session.openTeamId;
+  const keptTab = session.teamTab;
+  try {
+    const result = await getView(serviceBase, "v1/board", {
+      season: currentSeason(),
+      week: currentWeek(),
+      seasontype: 2,
+    });
+    const accepted = acceptRenderable(result.body);
+    if (!result.ok || !accepted.ok || accepted.mode !== "server") {
+      bannerText = "The scoreboard service did not refresh. Showing the last good snapshot.";
+      if (snapshot) snapshot = { ...snapshot, state: "stale_snapshot" };
+      status = "Refresh failed. This page did not invent scores.";
+    } else {
+      snapshot = result.body;
+      session.openTeamId = keptTeam;
+      session.teamTab = keptTab;
+      bannerText = "";
+      status = result.body.state === "stale_snapshot"
+        ? "Service returned a stale snapshot. Open teams stayed open."
+        : "Refreshed from the scoreboard service. Not a live clock.";
+    }
+  } catch {
+    bannerText = "The scoreboard service could not be reached. Showing the last good snapshot.";
+    if (snapshot) snapshot = { ...snapshot, state: "stale_snapshot" };
+    status = "Refresh failed. This page did not invent scores.";
+  }
+  render();
+}
+
+async function ensureDetail(kind) {
+  if (!serviceBase || !snapshot || !session.openTeamId) return;
+  const season = currentSeason();
+  const id = String(session.openTeamId);
+  const key = `${season}:${id}`;
+  if (kind === "roster" && snapshot.rosters?.[key]) return;
+  if (kind === "stats" && snapshot.teamStats?.[key]) return;
+  const result = await getView(serviceBase, kind === "roster" ? "v1/roster" : "v1/stats", { team: id, season });
+  if (!result.ok || !result.body) {
+    bannerText = kind === "roster" ? "Roster could not be loaded." : "Stats could not be loaded.";
+    render();
+    return;
+  }
+  if (kind === "roster") snapshot.rosters = { ...(snapshot.rosters || {}), [key]: result.body };
+  else snapshot.teamStats = { ...(snapshot.teamStats || {}), [key]: result.body };
+  bannerText = "";
   render();
 }
 
@@ -123,8 +198,7 @@ const refreshLoop = createRefreshLoop({
   isEnabled: () => prefs.autoRefresh !== false,
   hasService: () => Boolean(serviceBase),
   onTick: () => {
-    status = "Auto-refresh tick. No ESPN request is made without a configured service.";
-    render();
+    if (serviceBase && !document.hidden) onRefresh(false);
   },
 });
 
@@ -168,6 +242,9 @@ document.getElementById("app").addEventListener("click", (event) => {
   } else if (action === "team-tab") {
     session.teamTab = value;
     session.openPlayerId = null;
+    render();
+    if (value === "roster" || value === "stats") ensureDetail(value);
+    return;
   } else if (action === "toggle-player") {
     session.openPlayerId = String(session.openPlayerId) === String(value) ? null : value;
   } else if (action === "stats-side") {
@@ -260,7 +337,7 @@ document.addEventListener("click", (event) => {
   }
 });
 
-if ("serviceWorker" in navigator) {
+if ("serviceWorker" in navigator && location.hostname !== "localhost" && location.hostname !== "127.0.0.1") {
   navigator.serviceWorker.register("./sw.js", { scope: "./" }).catch(() => {});
 }
 
@@ -270,14 +347,15 @@ if (params.get("theme") === "light" || params.get("theme") === "dark") {
   savePrefs();
 }
 if (params.get("view") === "games") session.mainTab = "games";
-if (["power", "ap", "coaches", "cfp"].includes(params.get("view"))) {
+if (["power", "ap", "coaches", "cfp", "fbs"].includes(params.get("view"))) {
   session.mainTab = "rankings";
   session.rankingView = params.get("view");
 }
 
 render();
 
-const boot = params.get("snapshot") === "captured" || params.get("fixture") === "test"
+const localPreview = location.hostname === "localhost" || location.hostname === "127.0.0.1";
+const boot = localPreview && (params.get("snapshot") === "captured" || params.get("fixture") === "test")
   ? loadFixtures().then(() => {
       const openTeam = params.get("openTeam");
       if (!openTeam || !snapshot) return;

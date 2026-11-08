@@ -16,11 +16,12 @@ import {
   pollWeeks,
   rosterFor,
   seasonChoices,
+  teamsFor,
   selectedPollWeek,
   teamStatsFor,
 } from "./select.js";
 
-const POLLS = [["ap", "AP"], ["coaches", "Coaches"], ["cfp", "CFP"], ["power", "Power"]];
+const POLLS = [["fbs", "FBS"], ["ap", "AP"], ["coaches", "Coaches"], ["cfp", "CFP"], ["power", "Power"]];
 
 export function renderApp(root, model) {
   const doc = root.ownerDocument;
@@ -93,7 +94,9 @@ function statusLine(model, season) {
   if (!snapshot || snapshot.state === "disconnected") return "No snapshot is loaded. Refresh does not contact ESPN.";
   const count = snapshot.memberships?.[season]?.count;
   const countText = count ? `${count} teams` : "partial snapshot";
-  return `Snapshot · not a live scoreboard · ${countText}`;
+  const kind = snapshot.source === "fbs-board-service" ? "Service" : "Snapshot";
+  const extra = model.session.rankingView === "fbs" ? " · sorted by recorded wins, not a power ranking" : "";
+  return `${kind} · not a live scoreboard · ${countText}${extra}`;
 }
 
 function renderBanner(doc, model) {
@@ -178,7 +181,7 @@ function filterStatus(model, season) {
   const rows = visibleRows(model, season);
   if (model.session.rankingView === "power") return "";
   if (!model.snapshot || model.snapshot.state === "disconnected") return "";
-  const total = pollRows(model, season).length;
+  const total = sourceRows(model, season).length;
   if (!total) return "";
   return `Showing ${rows.length} of ${total}`;
 }
@@ -230,6 +233,38 @@ function currentPoll(model, season) {
   return model.snapshot?.polls?.[season]?.[week]?.families?.[family] || null;
 }
 
+function recordParts(text) {
+  const match = /^(\d+)-(\d+)(?:-(\d+))?/.exec(text || "");
+  if (!match) return { wins: -1, losses: 99, ties: 0 };
+  return { wins: Number(match[1]), losses: Number(match[2]), ties: Number(match[3] || 0) };
+}
+
+function fbsRows(model, season) {
+  const rows = teamsFor(model.snapshot, season).map((team) => ({
+    providerId: team.providerId,
+    school: team.school,
+    conference: team.conference,
+    division: team.division,
+    logo: team.logo,
+    recordText: team.recordText,
+    extra: null,
+    live: teamIsLive(model.snapshot, season, team.providerId),
+  }));
+  rows.sort((a, b) => {
+    const left = recordParts(a.recordText);
+    const right = recordParts(b.recordText);
+    if (right.wins !== left.wins) return right.wins - left.wins;
+    if (left.losses !== right.losses) return left.losses - right.losses;
+    return String(a.school).localeCompare(String(b.school));
+  });
+  return rows.map((row, index) => ({ ...row, rank: index + 1 }));
+}
+
+function sourceRows(model, season) {
+  if (model.session.rankingView === "fbs") return fbsRows(model, season);
+  return pollRows(model, season);
+}
+
 function pollRows(model, season) {
   const poll = currentPoll(model, season);
   if (!poll || poll.state !== "available") return [];
@@ -250,7 +285,7 @@ function pollRows(model, season) {
 }
 
 function visibleRows(model, season) {
-  return pollRows(model, season).filter((row) => {
+  return sourceRows(model, season).filter((row) => {
     if (model.session.liveOnly && !row.live) return false;
     if (model.session.conference !== "all" && row.conference !== model.session.conference) return false;
     if (model.session.division && model.session.division !== "all" && row.division !== model.session.division) return false;

@@ -137,6 +137,15 @@ test("reopen closes panels and returns filters to All without dropping the poll"
   assert.equal(root.querySelector(".panel"), null);
 });
 
+test("the FBS list is every stored team sorted by record, not a power ranking", () => {
+  const session = createSession();
+  session.rankingView = "fbs";
+  const root = mount(session, capture);
+  assert.match(root.textContent, /Showing 138 of 138/);
+  assert.match(root.textContent, /not a power ranking/);
+  assert.equal(root.querySelector("[data-testid=power-unavailable]"), null);
+});
+
 test("refresh keeps the open team", () => {
   const session = createSession();
   session.rankingView = "ap";

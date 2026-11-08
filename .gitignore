@@ -3,3 +3,5 @@ node_modules/
 *.log
 agent-tools/
 uploads/
+.wrangler-dry-run/
+.wrangler/
