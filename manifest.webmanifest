@@ -1,0 +1,18 @@
+{
+  "name": "FBS Board",
+  "short_name": "FBS Board",
+  "description": "Independent college football snapshot companion. Not affiliated with the NCAA or the College Football Playoff.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0e1512",
+  "theme_color": "#14221c",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

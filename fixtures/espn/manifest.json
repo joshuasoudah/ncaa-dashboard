@@ -1,0 +1,96 @@
+{
+  "fixtureClass": "public-espn-capture",
+  "fetchedAt": "2026-11-08T17:21:00.000Z",
+  "note": "Trimmed from public ESPN responses. Not a live connection and not a complete feed mirror.",
+  "liveClockObserved": false,
+  "observedScoreboardStates": [
+    "post/STATUS_FINAL",
+    "post/STATUS_FINAL Final/OT"
+  ],
+  "requests": [
+    {
+      "url": "https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?groups=80&limit=100",
+      "http": 200,
+      "events": 63,
+      "live": 0
+    },
+    {
+      "url": "https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?groups=80&dates=20261108&limit=100",
+      "http": 200,
+      "events": 0
+    },
+    {
+      "url": "https://site.api.espn.com/apis/v2/sports/football/college-football/standings?season=2026",
+      "http": 200,
+      "teams": 138
+    },
+    {
+      "url": "https://site.api.espn.com/apis/v2/sports/football/college-football/standings?season=2024",
+      "http": 200,
+      "teams": 134
+    },
+    {
+      "url": "https://site.api.espn.com/apis/site/v2/sports/football/college-football/rankings?seasons=2026&week=10&seasontype=2",
+      "http": 200
+    },
+    {
+      "url": "https://site.api.espn.com/apis/site/v2/sports/football/college-football/rankings?seasons=2026&week=9&seasontype=2",
+      "http": 200,
+      "result": "wrong_week",
+      "echoedWeek": 10
+    },
+    {
+      "url": "https://site.api.espn.com/apis/site/v2/sports/football/college-football/teams/333/roster?season=2026",
+      "http": 200,
+      "players": 100
+    },
+    {
+      "url": "https://site.api.espn.com/apis/site/v2/sports/football/college-football/teams/333/roster?season=2025",
+      "http": 200,
+      "state": "no_data"
+    },
+    {
+      "url": "https://site.api.espn.com/apis/site/v2/sports/football/college-football/teams/333/statistics?season=2025",
+      "http": 200,
+      "state": "season_mismatch",
+      "returnedSeason": 2026
+    },
+    {
+      "url": "https://site.api.espn.com/apis/site/v2/sports/football/college-football/teams/333/schedule?season=2024&seasontype=3",
+      "http": 200,
+      "events": 1,
+      "topLevelSeason": 2026
+    },
+    {
+      "url": "https://site.api.espn.com/apis/site/v2/sports/football/college-football/teams/333/depthcharts",
+      "http": 200,
+      "depthChartItems": 0
+    }
+  ],
+  "conferenceCounts2026": {
+    "American Conference": 14,
+    "Atlantic Coast Conference": 17,
+    "Big 12 Conference": 16,
+    "Big Ten Conference": 18,
+    "Conference USA": 10,
+    "FBS Independents": 2,
+    "Mid-American Conference": 13,
+    "Mountain West Conference": 10,
+    "Pac-12 Conference": 8,
+    "Southeastern Conference": 16,
+    "Sun Belt Conference": 14
+  },
+  "conferenceCounts2024": {
+    "American Conference": 14,
+    "Atlantic Coast Conference": 17,
+    "Big 12 Conference": 16,
+    "Big Ten Conference": 18,
+    "Conference USA": 10,
+    "FBS Independents": 3,
+    "Mid-American Conference": 12,
+    "Mountain West Conference": 12,
+    "Pac-12 Conference": 2,
+    "Southeastern Conference": 16,
+    "Sun Belt Conference": 14
+  }
+}

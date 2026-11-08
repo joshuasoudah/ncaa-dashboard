@@ -1,0 +1,167 @@
+{
+  "fixtureClass": "test-only-synthetic",
+  "warning": "Synthetic interface fixtures. Not a CFBD response. Do not present as real results.",
+  "fetchedAt": "2026-11-08T22:10:00.000Z",
+  "coverage": "partial",
+  "membership": {
+    "2026": [
+      {"id": 9001, "school": "North Fixture", "mascot": "Samples", "abbreviation": "NFU", "conference": "Big Sample", "division": null, "classification": "fbs", "color": "#112233", "alternateColor": "#445566", "logos": ["https://example.invalid/nfu.png"], "twitter": "@not-real", "location": {"city": "Sample City", "state": "IL"}},
+      {"id": 9002, "school": "South Fixture", "mascot": "Placeholders", "abbreviation": "SFC", "conference": "Big Sample", "classification": "fbs", "logos": ["https://example.invalid/sfc.png"], "location": {"city": "Fixture Town", "state": "TX"}},
+      {"id": 9003, "school": "East Placeholder", "mascot": "Markers", "abbreviation": "EPH", "conference": "Sample Belt", "classification": "fbs", "location": {"city": "Marker", "state": "GA"}},
+      {"id": 9004, "school": "West Mock State", "mascot": "Stubs", "abbreviation": "WMS", "conference": "Sample Belt", "classification": "fbs", "location": {"city": "Mockville", "state": "CA"}},
+      {"id": 9005, "school": "Independent Fixture", "mascot": "Solos", "abbreviation": "IND", "conference": "FBS Independents", "classification": "fbs", "location": {"city": "Solo", "state": "NM"}}
+    ],
+    "2025": [
+      {"id": 9001, "school": "North Fixture", "mascot": "Samples", "abbreviation": "NFU", "conference": "Big Sample", "classification": "fbs", "logos": ["https://example.invalid/nfu.png"]},
+      {"id": 9002, "school": "South Fixture", "mascot": "Placeholders", "abbreviation": "SFC", "conference": "Big Sample", "classification": "fbs"},
+      {"id": 9003, "school": "East Placeholder", "mascot": "Markers", "abbreviation": "EPH", "conference": "Old Sample", "classification": "fbs"},
+      {"id": 9005, "school": "Independent Fixture", "mascot": "Solos", "abbreviation": "IND", "conference": null, "classification": "fbs"}
+    ]
+  },
+  "games": {
+    "2026": [
+      {"id": 1, "season": 2026, "week": 1, "seasonType": "regular", "startDate": "2026-08-29T23:00:00.000Z", "startTimeTBD": false, "completed": true, "neutralSite": false, "conferenceGame": true, "attendance": 1000, "venueId": 1, "venue": "Fixture Field", "homeId": 9001, "homeTeam": "North Fixture", "homeConference": "Big Sample", "homeClassification": "fbs", "homePoints": 24, "awayId": 9002, "awayTeam": "South Fixture", "awayConference": "Big Sample", "awayClassification": "fbs", "awayPoints": 17, "notes": null},
+      {"id": 2, "season": 2026, "week": 2, "seasonType": "regular", "startDate": "2026-09-12T19:00:00.000Z", "startTimeTBD": false, "completed": false, "neutralSite": false, "conferenceGame": false, "venue": "Fixture Field", "homeId": 9001, "homeTeam": "North Fixture", "homeConference": "Big Sample", "homeClassification": "fbs", "homePoints": null, "awayId": 9100, "awayTeam": "FCS Example", "awayConference": "Example FCS", "awayClassification": "fcs", "awayPoints": null, "notes": null},
+      {"id": 3, "season": 2026, "week": 3, "seasonType": "regular", "startDate": "2026-09-19T19:00:00.000Z", "startTimeTBD": false, "completed": false, "neutralSite": false, "conferenceGame": false, "venue": "Marker Stadium", "homeId": 9003, "homeTeam": "East Placeholder", "homeConference": "Sample Belt", "homeClassification": "fbs", "homePoints": null, "awayId": 9001, "awayTeam": "North Fixture", "awayConference": "Big Sample", "awayClassification": "fbs", "awayPoints": null, "notes": "Postponed due to weather"},
+      {"id": 4, "season": 2026, "week": 4, "seasonType": "regular", "startDate": "2026-09-26T19:00:00.000Z", "startTimeTBD": false, "completed": false, "neutralSite": false, "conferenceGame": false, "venue": "Placeholder Park", "homeId": 9002, "homeTeam": "South Fixture", "homeConference": "Big Sample", "homeClassification": "fbs", "homePoints": null, "awayId": 9004, "awayTeam": "West Mock State", "awayConference": "Sample Belt", "awayClassification": "fbs", "awayPoints": null, "notes": "Cancelled"},
+      {"id": 5, "season": 2026, "week": 5, "seasonType": "regular", "startDate": "2026-10-03T16:00:00.000Z", "startTimeTBD": false, "completed": true, "neutralSite": true, "conferenceGame": false, "venue": "Neutral Lot", "homeId": 9002, "homeTeam": "South Fixture", "homeConference": "Big Sample", "homeClassification": "fbs", "homePoints": 10, "awayId": 9005, "awayTeam": "Independent Fixture", "awayConference": "FBS Independents", "awayClassification": "fbs", "awayPoints": 10, "notes": null},
+      {"id": 6, "season": 2026, "week": 6, "seasonType": "regular", "startDate": "2026-10-10T19:00:00.000Z", "startTimeTBD": false, "completed": true, "neutralSite": false, "conferenceGame": false, "venue": "Fixture Field", "homeId": 9001, "homeTeam": "North Fixture", "homeConference": "Big Sample", "homeClassification": "fbs", "homePoints": null, "awayId": 9005, "awayTeam": "Independent Fixture", "awayConference": "FBS Independents", "awayClassification": "fbs", "awayPoints": null, "notes": null},
+      {"id": 7, "season": 2026, "week": 7, "seasonType": "regular", "startDate": "2026-10-17T19:00:00.000Z", "startTimeTBD": false, "completed": false, "neutralSite": false, "conferenceGame": false, "venue": "Mock Stadium", "homeId": 9004, "homeTeam": "West Mock State", "homeConference": "Sample Belt", "homeClassification": "fbs", "homePoints": null, "awayId": 9001, "awayTeam": "North Fixture", "awayConference": "Big Sample", "awayClassification": "fbs", "awayPoints": null, "notes": null},
+      {"id": 8, "season": 2026, "week": 8, "seasonType": "regular", "startDate": "2026-11-07T18:00:00.000Z", "startTimeTBD": false, "completed": false, "neutralSite": false, "conferenceGame": false, "venue": "Marker Stadium", "homeId": 9003, "homeTeam": "East Placeholder", "homeConference": "Sample Belt", "homeClassification": "fbs", "homePoints": 10, "awayId": 9002, "awayTeam": "South Fixture", "awayConference": "Big Sample", "awayClassification": "fbs", "awayPoints": 7, "notes": null},
+      {"id": 1, "season": 2026, "week": 1, "seasonType": "regular", "startDate": "2026-08-29T23:00:00.000Z", "startTimeTBD": false, "completed": true, "neutralSite": false, "conferenceGame": true, "venue": "Fixture Field", "homeId": 9001, "homeTeam": "North Fixture", "homeClassification": "fbs", "homePoints": 99, "awayId": 9002, "awayTeam": "South Fixture", "awayClassification": "fbs", "awayPoints": 0, "notes": "duplicate that must be ignored"},
+      {"id": 10, "season": 2026, "week": 14, "seasonType": "regular", "startDate": "2026-12-05T21:00:00.000Z", "startTimeTBD": false, "completed": true, "neutralSite": true, "conferenceGame": true, "venue": "Sample Title Site", "homeId": 9001, "homeTeam": "North Fixture", "homeConference": "Big Sample", "homeClassification": "fbs", "homePoints": 21, "awayId": 9004, "awayTeam": "West Mock State", "awayConference": "Sample Belt", "awayClassification": "fbs", "awayPoints": 14, "notes": "Conference Championship"},
+      {"id": 12, "season": 2026, "week": 9, "seasonType": "regular", "startDate": "2026-11-01T19:00:00.000Z", "startTimeTBD": false, "completed": true, "neutralSite": false, "conferenceGame": false, "venue": "Mock Stadium", "homeId": 9004, "homeTeam": "West Mock State", "homeConference": "Sample Belt", "homeClassification": "fbs", "homePoints": 10, "awayId": 9002, "awayTeam": "South Fixture", "awayConference": "Big Sample", "awayClassification": "fbs", "awayPoints": 0, "notes": null},
+      {"id": 99, "season": 2025, "week": 1, "seasonType": "regular", "startDate": "2025-09-01T19:00:00.000Z", "completed": true, "neutralSite": false, "homeId": 9001, "homeTeam": "North Fixture", "homeClassification": "fbs", "homePoints": 70, "awayId": 9002, "awayTeam": "South Fixture", "awayClassification": "fbs", "awayPoints": 0, "notes": "wrong season slipped into the 2026 feed"}
+    ],
+    "2025": [
+      {"id": 20, "season": 2025, "week": 1, "seasonType": "regular", "startDate": "2025-08-30T23:00:00.000Z", "startTimeTBD": false, "completed": true, "neutralSite": false, "conferenceGame": false, "venue": "Marker Stadium", "homeId": 9003, "homeTeam": "East Placeholder", "homeConference": "Old Sample", "homeClassification": "fbs", "homePoints": 7, "awayId": 9001, "awayTeam": "North Fixture", "awayConference": "Big Sample", "awayClassification": "fbs", "awayPoints": 14, "notes": null},
+      {"id": 21, "season": 2025, "week": 1, "seasonType": "postseason", "startDate": "2026-01-01T18:00:00.000Z", "startTimeTBD": false, "completed": true, "neutralSite": true, "conferenceGame": false, "venue": "Sample Bowl Site", "homeId": 9001, "homeTeam": "North Fixture", "homeConference": "Big Sample", "homeClassification": "fbs", "homePoints": 30, "awayId": 9002, "awayTeam": "South Fixture", "awayConference": "Big Sample", "awayClassification": "fbs", "awayPoints": 27, "notes": "Sample Bowl", "playoff": {"competition": "cfp", "roundName": "Sample round", "bowlName": "Sample Bowl"}}
+    ]
+  },
+  "rankings": [
+    {
+      "season": 2026,
+      "seasonType": "regular",
+      "week": 10,
+      "polls": [
+        {
+          "poll": "AP Top 25",
+          "isFinal": null,
+          "ranks": [
+            {"rank": 1, "teamId": 9001, "school": "North Fixture", "conference": "Big Sample", "firstPlaceVotes": 12, "points": 1500},
+            {"rank": 2, "teamId": 9002, "school": "South Fixture", "conference": "Big Sample", "firstPlaceVotes": 0, "points": 1400},
+            {"rank": null, "teamId": 9003, "school": "Should Not Appear", "conference": "Sample Belt", "firstPlaceVotes": 1, "points": 20}
+          ]
+        },
+        {
+          "poll": "Coaches Poll",
+          "isFinal": null,
+          "ranks": [
+            {"rank": 1, "teamId": 9002, "school": "South Fixture", "conference": "Big Sample", "firstPlaceVotes": 8, "points": 1475},
+            {"rank": 2, "teamId": 9001, "school": "North Fixture", "conference": "Big Sample", "firstPlaceVotes": 4, "points": 1460}
+          ]
+        },
+        {
+          "poll": "Playoff Committee Rankings",
+          "isFinal": null,
+          "ranks": [
+            {"rank": 1, "teamId": 9001, "school": "North Fixture", "conference": "Big Sample", "firstPlaceVotes": null, "points": null},
+            {"rank": 2, "teamId": 9003, "school": "East Placeholder", "conference": "Sample Belt", "firstPlaceVotes": null, "points": null}
+          ]
+        },
+        {
+          "poll": "FCS Coaches Poll",
+          "isFinal": null,
+          "ranks": [
+            {"rank": 1, "teamId": 9100, "school": "FCS Example", "conference": "Example FCS", "firstPlaceVotes": 20, "points": 800}
+          ]
+        }
+      ]
+    },
+    {
+      "season": 2026,
+      "seasonType": "regular",
+      "week": 9,
+      "polls": [
+        {
+          "poll": "AP Top 25",
+          "isFinal": null,
+          "ranks": [
+            {"rank": 1, "teamId": 9002, "school": "South Fixture", "conference": "Big Sample", "firstPlaceVotes": 10, "points": 1490}
+          ]
+        },
+        {
+          "poll": "Coaches Poll",
+          "isFinal": null,
+          "ranks": [
+            {"rank": 1, "teamId": 9002, "school": "South Fixture", "conference": "Big Sample", "firstPlaceVotes": 9, "points": 1480}
+          ]
+        }
+      ]
+    },
+    {
+      "season": 2025,
+      "seasonType": "regular",
+      "week": 10,
+      "polls": [
+        {
+          "poll": "AP Top 25",
+          "isFinal": false,
+          "ranks": [
+            {"rank": 1, "teamId": 9001, "school": "North Fixture", "conference": "Big Sample", "firstPlaceVotes": 3, "points": 1200}
+          ]
+        },
+        {
+          "poll": "Coaches Poll",
+          "isFinal": false,
+          "ranks": [
+            {"rank": 1, "teamId": 9003, "school": "East Placeholder", "conference": "Old Sample", "firstPlaceVotes": 2, "points": 1100}
+          ]
+        }
+      ]
+    }
+  ],
+  "rosters": [
+    {
+      "season": 2026,
+      "school": "North Fixture",
+      "coverage": "partial",
+      "players": [
+        {"id": 1, "firstName": "Ada", "lastName": "Sample", "team": "North Fixture", "height": 75, "weight": 210, "jersey": 12, "year": 1, "position": "QB", "homeCity": "Sample City", "homeState": "IL", "homeCountry": "US", "homeLatitude": 41.8, "homeLongitude": -87.6, "homeCountyFIPS": "00000", "recruitIds": ["skip-me"]},
+        {"id": 2, "firstName": "Bea", "lastName": "Nulltown", "team": "North Fixture", "height": null, "weight": null, "jersey": null, "year": 1, "position": "WR", "homeCity": null, "homeState": null, "homeCountry": null, "homeLatitude": null, "homeLongitude": null, "homeCountyFIPS": null, "recruitIds": null},
+        {"id": 3, "firstName": "Cy", "lastName": "Zero", "team": "North Fixture", "height": 70, "weight": 0, "jersey": 0, "year": 2026, "position": "K", "homeCity": "Zero City", "homeState": "WI", "homeCountry": "US"}
+      ]
+    }
+  ],
+  "teamStats": [
+    {
+      "season": 2026,
+      "school": "North Fixture",
+      "coverage": "partial",
+      "rows": [
+        {"season": 2026, "team": "North Fixture", "conference": "Big Sample", "statName": "games", "statValue": 9},
+        {"season": 2026, "team": "North Fixture", "conference": "Big Sample", "statName": "netPassingYards", "statValue": 2286},
+        {"season": 2026, "team": "North Fixture", "conference": "Big Sample", "statName": "turnovers", "statValue": 0},
+        {"season": 2026, "team": "North Fixture", "conference": "Big Sample", "statName": "passingTDs", "statValue": null},
+        {"season": 2025, "team": "North Fixture", "conference": "Big Sample", "statName": "games", "statValue": 15}
+      ]
+    }
+  ],
+  "playerStats": [
+    {
+      "season": 2026,
+      "school": "North Fixture",
+      "category": "passing",
+      "seasonType": null,
+      "coverage": "partial",
+      "rows": [
+        {"season": 2026, "playerId": "1", "player": "Ada Sample", "position": "QB", "team": "North Fixture", "conference": "Big Sample", "category": "passing", "statType": "YDS", "stat": "2263"},
+        {"season": 2026, "playerId": "1", "player": "Ada Sample", "position": "QB", "team": "North Fixture", "conference": "Big Sample", "category": "passing", "statType": "PCT", "stat": "0.673"},
+        {"season": 2026, "playerId": "1", "player": "Ada Sample", "position": "QB", "team": "North Fixture", "conference": "Big Sample", "category": "passing", "statType": "INT", "stat": "0"},
+        {"season": 2026, "playerId": "2", "player": "Bea Nulltown", "position": "WR", "team": "North Fixture", "conference": "Big Sample", "category": "passing", "statType": "YDS", "stat": null},
+        {"season": 2026, "playerId": "4", "player": "Dee Fraction", "position": "QB", "team": "North Fixture", "conference": "Big Sample", "category": "passing", "statType": "PCT", "stat": "0"},
+        {"season": 2025, "playerId": "1", "player": "Ada Sample", "position": "QB", "team": "North Fixture", "conference": "Big Sample", "category": "passing", "statType": "YDS", "stat": "9999"}
+      ]
+    }
+  ]
+}

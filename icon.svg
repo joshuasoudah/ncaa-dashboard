@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="FBS Board">
+  <rect width="64" height="64" rx="14" fill="#14221c"/>
+  <rect x="6" y="52" width="52" height="4" fill="#c4a35a"/>
+  <text x="32" y="40" text-anchor="middle" font-family="Segoe UI, Helvetica, sans-serif" font-size="22" font-weight="700" fill="#f4f1ea">FB</text>
+</svg>

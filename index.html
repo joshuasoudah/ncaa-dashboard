@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Independent college football snapshot companion. Not affiliated with ESPN, the NCAA, conferences, or schools.">
+<meta name="theme-color" content="#14221c">
+<meta name="color-scheme" content="dark light">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="FBS Board">
+<title>FBS Board</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="styles.css">
+<script>
+try {
+  var stored = JSON.parse(localStorage.getItem("fbs-board-prefs-v1") || "{}");
+  var theme = stored && stored.theme;
+  var choice = theme === "light" || theme === "dark" ? theme : (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  document.documentElement.dataset.theme = choice;
+  var reduce = stored && stored.reduceMotion === true || matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (stored && stored.reduceMotion === false) reduce = false;
+  document.documentElement.dataset.reduceMotion = reduce ? "true" : "false";
+} catch (error) { /* keep the default theme */ }
+</script>
+</head>
+<body>
+<a class="skip" href="#app">Skip to content</a>
+<div id="app">
+  <header class="scoreboard">
+    <div class="brand">
+      <div class="monogram" aria-hidden="true">FB</div>
+      <div>
+        <h1>FBS Board</h1>
+        <p class="tagline">College football companion</p>
+      </div>
+    </div>
+  </header>
+  <p class="banner plan">Not connected. No snapshot is loaded.</p>
+  <p id="status" class="status-line" role="status">Not connected. Reload does not contact ESPN.</p>
+</div>
+<noscript>
+  <p>This companion needs JavaScript to switch views. It does not include baked-in scores.</p>
+</noscript>
+<script type="module" src="./app.js"></script>
+</body>
+</html>
