@@ -66,18 +66,15 @@ npm start
 
 ## Deploy
 
-Do this only with the GitHub repository and the Cloudflare account that owns `josh-soudah.workers.dev`. This package does not deploy itself.
+The college Worker is a separate script, `fbs-board-data`, intended at `https://fbs-board-data.josh-soudah.workers.dev`. `fbs-config.js` sets `apiBase` to that origin. The page calls only its `/v1/...` routes. Do not point this site at the NFL Worker.
 
-1. Create `https://github.com/joshuasoudah/ncaa-dashboard` and put this source there. Do not put it in the NFL repository.
-2. From the repository root, package the Worker without guessing a second config:
+GitHub Pages for this repository is `https://joshuasoudah.github.io/ncaa-dashboard/`. The workflow `.github/workflows/pages.yml` (`Deploy GitHub Pages`) runs on every push to `main` and on `workflow_dispatch`. It runs `npm test`, builds `pages-dist/` with `node scripts/assemble-pages.mjs`, and deploys that directory. `pages-dist/` contains the static app only. Fixtures, tests, and the Worker are not in it. Asset URLs are relative, and the service worker is registered as `./sw.js` with scope `./`, so both stay under `/ncaa-dashboard/`. Its cache names start with `fbs-board-`.
 
-   ```bash
-   npx wrangler deploy --dry-run --config worker/wrangler.jsonc --outdir .wrangler-dry-run
-   ```
+Before that workflow can publish, the repository Pages setting must be GitHub Actions, not a branch folder:
 
-   The live upload belongs to the account owner. Expected name: `fbs-board-data`. Expected dev URL: `https://fbs-board-data.josh-soudah.workers.dev`. `workers_dev` is true for that URL. `ALLOWED_ORIGIN` is `https://joshuasoudah.github.io`.
-3. Publish the static site at `/ncaa-dashboard/` on `https://joshuasoudah.github.io`. Use `node scripts/assemble-pages.mjs` and publish that directory, not `fixtures/`, `worker/`, or `node_modules/`. The service worker is `./sw.js` and its caches start with `fbs-board-`.
-4. Leave `fbs-config.js` pointed at the college Worker. Do not point it at the NFL Worker.
+`POST /repos/joshuasoudah/ncaa-dashboard/pages` with `{ "build_type": "workflow" }`.
+
+If a push runs before that setting exists, the deploy job fails until Pages is set, then run **Deploy GitHub Pages** with `workflow_dispatch`. This file does not enable Pages by itself.
 
 ## Smoke tests after the Worker exists
 
@@ -111,4 +108,4 @@ Change the ESPN paths only in `src/espn/urls.js`. Keep normalization in `src/esp
 - The default board refresh is the regular-season scoreboard for the selected week. It does not download every team’s postseason schedule.
 - The 2026 standings walk was 138 teams and the 2024 walk was 134. A later season can differ. The app does not hardcode those counts.
 - iPhone Safari and the home-screen icon were not checked on a phone.
-- This tree is not yet the GitHub repository, and the Worker was not created from here.
+- The site URL above is the Pages target. It is live only after the workflow run is green and the parent has confirmed the deployment.

@@ -20,6 +20,12 @@ The production Worker calls `globalThis.fetch` and builds ESPN college-football 
 
 `npx wrangler deploy --dry-run --config worker/wrangler.jsonc --outdir .wrangler-dry-run` packages the Worker and does not upload it.
 
-`node scripts/assemble-pages.mjs` writes `pages-dist/` for the Pages path. It omits fixtures, tests, and the Worker. Publish that directory as `/ncaa-dashboard/`. The service worker scope is `./`, so it stays under that path.
+`node scripts/assemble-pages.mjs` writes `pages-dist/` for the Pages path. It omits fixtures, tests, and the Worker. `.github/workflows/pages.yml` (workflow name `Deploy GitHub Pages`) tests, assembles that directory, and deploys it on push to `main` and on `workflow_dispatch`. Permissions are `contents: read`, `pages: write`, and `id-token: write`.
+
+Pages API setting required before the deploy job can succeed:
+
+`POST /repos/joshuasoudah/ncaa-dashboard/pages` with body `{ "build_type": "workflow" }`.
+
+The service worker scope is `./`, so a site published at `/ncaa-dashboard/` does not register at the host root. `fbs-config.js` calls `https://fbs-board-data.josh-soudah.workers.dev` and the page uses `/v1` routes only.
 
 CORS allows the GitHub Pages origin. It does not authenticate the viewer. Cache hits still count toward the shared Free plan limit of 100,000 Worker requests a day.
