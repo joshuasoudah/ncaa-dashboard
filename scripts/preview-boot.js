@@ -214,7 +214,7 @@ const params = new URLSearchParams(location.search);
 if (params.get("theme") === "light" || params.get("theme") === "dark") prefs.theme = params.get("theme");
 if (params.get("view") === "games") {
   session.rankingView = "ap";
-  session.openTeamId = params.get("openTeam") || "333";
+  session.openTeamId = params.get("openTeam") || "2390";
   session.teamTab = "games";
 } else if (params.get("view") === "rankings") session.mainTab = "rankings";
 if (["power", "ap", "coaches", "cfp"].includes(params.get("view"))) {
