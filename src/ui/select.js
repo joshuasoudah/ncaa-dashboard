@@ -27,6 +27,20 @@ export function conferencesFor(snapshot, season) {
   return [...names].sort((a, b) => a.localeCompare(b));
 }
 
+export function divisionsFor(snapshot, season, conference = "all") {
+  const names = new Set(
+    teamsFor(snapshot, season)
+      .filter((team) => conference === "all" || team.conference === conference)
+      .map((team) => team.division)
+      .filter(Boolean),
+  );
+  return [...names].sort((a, b) => a.localeCompare(b));
+}
+
+export function membershipTeam(snapshot, season, providerId) {
+  return teamsFor(snapshot, season).find((team) => String(team.providerId) === String(providerId)) || null;
+}
+
 export function conferenceOf(snapshot, season, providerId, fallback) {
   const team = teamsFor(snapshot, season).find((item) => String(item.providerId) === String(providerId));
   if (team) return team.conference;

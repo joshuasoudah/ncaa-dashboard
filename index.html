@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="Independent college football snapshot companion. Not affiliated with ESPN, the NCAA, conferences, or schools.">
-<meta name="theme-color" content="#14221c">
+<meta name="description" content="Unofficial college football snapshot. Not affiliated with ESPN, the NCAA, or the schools.">
+<meta name="theme-color" content="#013369">
 <meta name="color-scheme" content="dark light">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="FBS Board">
@@ -25,23 +25,23 @@ try {
 </script>
 </head>
 <body>
-<a class="skip" href="#app">Skip to content</a>
-<div id="app">
-  <header class="scoreboard">
-    <div class="brand">
-      <div class="monogram" aria-hidden="true">FB</div>
-      <div>
-        <h1>FBS Board</h1>
-        <p class="tagline">College football companion</p>
-      </div>
+<main>
+  <div id="app">
+    <div class="sticky">
+      <header class="scoreboard">
+        <div class="brand">
+          <div>
+            <h1>FBS Board</h1>
+            <p id="season">Not connected</p>
+            <p class="live-state" id="live-state"><span class="live-dot" aria-hidden="true"></span><span id="live-label">Snapshot</span></p>
+          </div>
+        </div>
+      </header>
+      <p class="meta" id="status" role="status">No snapshot is loaded.</p>
     </div>
-  </header>
-  <p class="banner plan">Not connected. No snapshot is loaded.</p>
-  <p id="status" class="status-line" role="status">Not connected. Reload does not contact ESPN.</p>
-</div>
-<noscript>
-  <p>This companion needs JavaScript to switch views. It does not include baked-in scores.</p>
-</noscript>
+  </div>
+  <noscript><p>This board needs JavaScript. It does not include baked-in scores until a snapshot is loaded.</p></noscript>
+</main>
 <script type="module" src="./app.js"></script>
 </body>
 </html>

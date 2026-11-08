@@ -4,6 +4,7 @@ export function createSession() {
     mainTab: "rankings",
     rankingView: "power",
     conference: "all",
+    division: "all",
     phase: "all",
     pollWeek: "latest",
     gameWeek: "all",
@@ -18,19 +19,14 @@ export function createSession() {
 }
 
 export function reopen(session) {
-  session.mainTab = "rankings";
-  session.rankingView = "power";
   session.conference = "all";
-  session.phase = "all";
-  session.pollWeek = "latest";
-  session.gameWeek = "all";
-  session.season = "default";
+  session.division = "all";
+  session.liveOnly = false;
   session.openTeamId = null;
   session.teamTab = "games";
   session.statsSide = "team";
   session.openPlayerId = null;
   session.dialog = null;
-  session.liveOnly = false;
   return session;
 }
 

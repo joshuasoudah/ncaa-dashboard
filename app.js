@@ -9,7 +9,9 @@ let serviceBase = null;
 const session = createSession();
 let snapshot = null;
 let status = "";
+let bannerText = "";
 let focusDialog = false;
+let leftWhileHidden = false;
 const prefs = loadPrefs();
 
 function loadPrefs() {
@@ -62,11 +64,17 @@ function render() {
     session,
     snapshot,
     theme: resolvedTheme(),
+    themeChoice: prefs.theme || "system",
     reduceMotion: resolvedMotion(),
     autoRefresh: prefs.autoRefresh !== false,
+    serviceConnected: Boolean(serviceBase),
+    hidden: document.hidden,
+    banner: bannerText,
     status,
   });
   syncMotionControl(root, resolvedMotion());
+  const settings = root.querySelector("#settings");
+  if (settings?.showModal && session.dialog === "settings" && !settings.open) settings.showModal();
   if (focusDialog) {
     focusDialog = false;
     root.querySelector("[data-action='close-dialog']")?.focus();
@@ -127,6 +135,10 @@ function resetPanels() {
   session.statsSide = "team";
 }
 
+function selectGuardActive() {
+  return document.activeElement?.tagName === "SELECT";
+}
+
 document.getElementById("app").addEventListener("click", (event) => {
   const target = event.target.closest("[data-action]");
   if (!target || target.tagName === "SELECT" || target.tagName === "INPUT") return;
@@ -135,12 +147,11 @@ document.getElementById("app").addEventListener("click", (event) => {
   if (action === "theme") {
     prefs.theme = resolvedTheme() === "dark" ? "light" : "dark";
     savePrefs();
-  } else if (action === "auto-refresh") {
-    prefs.autoRefresh = prefs.autoRefresh === false;
-    savePrefs();
-    refreshLoop.start();
   } else if (action === "live-only") {
     session.liveOnly = !session.liveOnly;
+  } else if (action === "settings") {
+    session.dialog = "settings";
+    focusDialog = true;
   } else if (action === "refresh") {
     onRefresh();
     return;
@@ -187,10 +198,20 @@ document.getElementById("app").addEventListener("change", (event) => {
     savePrefs();
     render();
     return;
+  } else if (action === "auto-refresh") {
+    prefs.autoRefresh = target.checked;
+    savePrefs();
+    refreshLoop.start();
+    render();
+    return;
+  } else if (action === "theme-choice") {
+    prefs.theme = target.value;
+    savePrefs();
+    render();
+    return;
   } else {
     return;
   }
-  resetPanels();
   render();
 });
 
@@ -221,15 +242,22 @@ window.addEventListener("pageshow", (event) => {
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) {
     refreshLoop.stop();
-    status = prefs.autoRefresh === false
-      ? status
-      : "Auto-refresh paused while this tab is hidden.";
-  } else {
-    refreshLoop.start();
-    if (serviceBase && prefs.autoRefresh !== false) status = "Auto-refresh resumed.";
-    else if (prefs.autoRefresh !== false) status = "Auto-refresh is on, and this tab is visible, but no scoreboard service is configured.";
+    if (!selectGuardActive()) leftWhileHidden = true;
+    return;
   }
+  refreshLoop.start();
+  const shouldReset = leftWhileHidden && !selectGuardActive();
+  leftWhileHidden = false;
+  if (shouldReset) reopen(session);
   render();
+});
+
+document.addEventListener("click", (event) => {
+  const dialog = document.querySelector("#settings");
+  if (dialog && event.target === dialog) {
+    session.dialog = null;
+    render();
+  }
 });
 
 if ("serviceWorker" in navigator) {
