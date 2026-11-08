@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import { parseHTML } from "linkedom";
 import { buildSnapshot } from "../src/normalize/snapshot.js";
-import { createSession, reopen } from "../src/ui/session.js";
+import { createSession, initialLoadPlan, reopen } from "../src/ui/session.js";
 import { renderApp } from "../src/ui/render.js";
 
 const bundle = JSON.parse(fs.readFileSync(new URL("../fixtures/synthetic/bundle.json", import.meta.url)));
@@ -27,13 +27,20 @@ function mount(session, data, extra = {}) {
   return root;
 }
 
+test("startup loads the service unless a local capture was requested", () => {
+  assert.equal(initialLoadPlan({ serviceBase: "https://fbs-board-data.josh-soudah.workers.dev", localPreview: false, captureRequested: true }), "service");
+  assert.equal(initialLoadPlan({ serviceBase: "https://fbs-board-data.josh-soudah.workers.dev", localPreview: true, captureRequested: true }), "capture");
+  assert.equal(initialLoadPlan({ serviceBase: "", localPreview: false, captureRequested: false }), "idle");
+});
+
 test("disconnected shell matches the standings toolbar and invents no teams", () => {
-  const root = mount(createSession(), null);
+  const session = createSession();
+  assert.equal(session.rankingView, "fbs");
+  const root = mount(session, null);
   const text = root.textContent;
   assert.match(text, /FBS Board/);
   assert.match(text, /Not connected/);
   assert.match(text, /does not contact ESPN/);
-  assert.match(text, /Power rankings are not available/);
   assert.equal(text.includes("Miami Hurricanes"), false);
   assert.equal(text.includes("North Fixture"), false);
   assert.equal(root.querySelector("#refresh").textContent, "Refresh now");
@@ -43,8 +50,31 @@ test("disconnected shell matches the standings toolbar and invents no teams", ()
   assert.equal(root.querySelector("input[type=search]"), null);
 });
 
+test("a configured service loads as FBS and does not say refresh skips ESPN", () => {
+  const session = createSession();
+  const root = mount(session, null, { serviceConnected: true });
+  const text = root.textContent;
+  assert.match(text, /Checking the scoreboard service/);
+  assert.match(text, /Loading/);
+  assert.equal(text.includes("does not contact ESPN"), false);
+  assert.equal(text.includes("Not connected"), false);
+  assert.equal(root.querySelector("#ranking-view").value, "fbs");
+  const loaded = structuredClone(capture);
+  loaded.source = "fbs-board-service";
+  loaded.fixtureClass = null;
+  loaded.synthetic = false;
+  loaded.state = "fresh_snapshot";
+  const ready = mount(session, loaded, { serviceConnected: true });
+  assert.match(ready.textContent, /Service · 138 teams/);
+  assert.match(ready.textContent, /live clock was not measured/);
+  assert.equal(ready.textContent.includes("not a live scoreboard"), false);
+  const stale = mount(session, { ...loaded, state: "stale_snapshot" }, { serviceConnected: true });
+  assert.match(stale.textContent, /Stale cached service data/);
+});
+
 test("captured polls show 25 real teams, receiving votes, and no power ranks", () => {
   const session = createSession();
+  session.rankingView = "power";
   const power = mount(session, capture);
   assert.match(power.querySelector("[data-testid=capture-banner]").textContent, /not a live scoreboard/i);
   assert.equal(power.textContent.includes("Miami Hurricanes"), false);

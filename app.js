@@ -2,7 +2,7 @@ import { DEFAULT_SEASON, PREF_KEY } from "./src/config.js";
 import { createRefreshLoop } from "./src/live/refresh.js";
 import { acceptRenderable } from "./src/normalize/snapshot.js";
 import { assertApiBase, getView } from "./src/service/client.js";
-import { createSession, reopen, resolveSeason } from "./src/ui/session.js";
+import { createSession, initialLoadPlan, reopen, resolveSeason } from "./src/ui/session.js";
 import { renderApp, syncMotionControl } from "./src/ui/render.js";
 
 const FIXTURE_URL = new URL("./fixtures/espn/snapshot.json", import.meta.url);
@@ -162,9 +162,7 @@ async function onRefresh(manual = true) {
       session.openTeamId = keptTeam;
       session.teamTab = keptTab;
       bannerText = "";
-      status = result.body.state === "stale_snapshot"
-        ? "Service returned a stale snapshot. Open teams stayed open."
-        : "Refreshed from the scoreboard service. Not a live clock.";
+      status = "";
     }
   } catch {
     bannerText = "The scoreboard service could not be reached. Showing the last good snapshot.";
@@ -355,7 +353,8 @@ if (["power", "ap", "coaches", "cfp", "fbs"].includes(params.get("view"))) {
 render();
 
 const localPreview = location.hostname === "localhost" || location.hostname === "127.0.0.1";
-const boot = localPreview && (params.get("snapshot") === "captured" || params.get("fixture") === "test")
+const captureRequested = params.get("snapshot") === "captured" || params.get("fixture") === "test";
+const boot = initialLoadPlan({ serviceBase, localPreview, captureRequested }) === "capture"
   ? loadFixtures().then(() => {
       const openTeam = params.get("openTeam");
       if (!openTeam || !snapshot) return;
@@ -371,7 +370,9 @@ const boot = localPreview && (params.get("snapshot") === "captured" || params.ge
       }
       render();
     })
-  : Promise.resolve();
+  : initialLoadPlan({ serviceBase, localPreview, captureRequested }) === "service"
+    ? onRefresh(true)
+    : Promise.resolve();
 
 window.__fbs = {
   session,

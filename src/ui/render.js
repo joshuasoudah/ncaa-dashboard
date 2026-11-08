@@ -85,18 +85,28 @@ function renderSticky(doc, model, season) {
 
 function seasonLine(model, season) {
   const week = selectedPollWeek(model.snapshot, season, model.session.pollWeek);
-  if (!model.snapshot || model.snapshot.state === "disconnected") return "Not connected";
+  if (!model.snapshot || model.snapshot.state === "disconnected") {
+    return model.serviceConnected ? "Loading" : "Not connected";
+  }
   return week ? `${season} · Week ${week}` : String(season);
 }
 
 function statusLine(model, season) {
   const snapshot = model.snapshot;
-  if (!snapshot || snapshot.state === "disconnected") return "No snapshot is loaded. Refresh does not contact ESPN.";
+  if (!snapshot || snapshot.state === "disconnected") {
+    if (model.status) return model.status;
+    if (model.serviceConnected) return "Checking the scoreboard service…";
+    return "No snapshot is loaded. Refresh does not contact ESPN.";
+  }
   const count = snapshot.memberships?.[season]?.count;
   const countText = count ? `${count} teams` : "partial snapshot";
-  const kind = snapshot.source === "fbs-board-service" ? "Service" : "Snapshot";
   const extra = model.session.rankingView === "fbs" ? " · sorted by recorded wins, not a power ranking" : "";
-  return `${kind} · not a live scoreboard · ${countText}${extra}`;
+  const storedCapture = snapshot.fixtureClass === "public-espn-capture" || snapshot.synthetic === true;
+  if (!storedCapture && snapshot.source === "fbs-board-service") {
+    const stale = snapshot.state === "stale_snapshot" ? "Stale cached service data. " : "";
+    return `${stale}Service · ${countText}${extra} · an in-progress game is shown only when ESPN marks it · a live clock was not measured`;
+  }
+  return `Snapshot · not a live scoreboard · ${countText}${extra}`;
 }
 
 function renderBanner(doc, model) {
@@ -530,7 +540,9 @@ function renderSettings(doc, model) {
       themeChoice(doc, "light", "Light"),
       themeChoice(doc, "dark", "Dark"),
     ]),
-    el(doc, "p", { class: "game-meta", text: "Auto-refresh is saved with the theme. This draft has no scoreboard service, so refresh reads the stored snapshot and does not contact ESPN. It pauses while the tab is hidden. Reopening closes teams, player details, and this dialog, and sets filters back to All." }),
+    el(doc, "p", { class: "game-meta", text: model.serviceConnected
+      ? "Auto-refresh calls the scoreboard service while this tab is visible and pauses while it is hidden. Refresh keeps the open team. Reopening closes teams, player details, and this dialog, and sets filters back to All. A cached row is not a live clock."
+      : "Auto-refresh is saved with the theme. This page has no scoreboard service, so refresh reads the stored snapshot and does not contact ESPN. It pauses while the tab is hidden. Reopening closes teams, player details, and this dialog, and sets filters back to All." }),
     el(doc, "details", {}, [
       el(doc, "summary", { text: "Snapshot notes" }),
       el(doc, "p", { class: "game-meta", text: "The loaded file is a November 8 public capture. Every game in that scoreboard was final, so no live clock was observed. Conference color is the thin stripe on a team. A glow uses that same color only for an in-progress status." }),

@@ -2,7 +2,7 @@
 export function createSession() {
   return {
     mainTab: "rankings",
-    rankingView: "power",
+    rankingView: "fbs",
     conference: "all",
     division: "all",
     phase: "all",
@@ -28,6 +28,13 @@ export function reopen(session) {
   session.openPlayerId = null;
   session.dialog = null;
   return session;
+}
+
+/** First visit: a configured service loads the board. A captured file loads only on an explicit local preview. */
+export function initialLoadPlan({ serviceBase, localPreview, captureRequested }) {
+  if (localPreview && captureRequested) return "capture";
+  if (serviceBase) return "service";
+  return "idle";
 }
 
 export function resolveSeason(session, snapshot, fallbackSeason) {
