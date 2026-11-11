@@ -1,34 +1,24 @@
 import { groupRoster } from "../normalize/roster.js";
 import { strokeFor } from "./conferences.js";
+import { buildDisplayList } from "./display-list.js";
 import { el } from "./dom.js";
 import {
   EM_DASH,
   activeSeason,
-  conferenceOf,
-  conferencesFor,
-  divisionsFor,
   fetchedLabel,
   gamesForTeam,
   measurement,
-  membershipTeam,
   opponentView,
   playerStatsFor,
-  pollWeeks,
   rosterFor,
-  seasonChoices,
-  teamsFor,
   selectedPollWeek,
   teamStatsFor,
 } from "./select.js";
 
-const POLLS = [["fbs", "FBS"], ["ap", "AP"], ["coaches", "Coaches"], ["cfp", "CFP"], ["power", "Power"]];
-
 export function renderApp(root, model) {
   const doc = root.ownerDocument;
   const season = activeSeason(model.session, model.snapshot);
-  const dialog = renderSettings(doc, model);
   root.replaceChildren(renderShell(doc, model, season));
-  if (dialog) root.append(dialog);
   syncMotionControl(root, model.reduceMotion);
   syncSettings(root, model);
 }
@@ -66,7 +56,6 @@ function renderSticky(doc, model, season) {
         el(doc, "button", { type: "button", id: "refresh", "data-action": "refresh", text: "Refresh now" }),
       ]),
     ]),
-    renderToolbar(doc, model, season),
     el(doc, "div", { class: "status-line" }, [
       el(doc, "p", { id: "status", class: "meta", role: "status", "data-testid": snapshot?.fixtureClass === "public-espn-capture" ? "capture-banner" : "status-line", text: statusLine(model, season) }),
       el(doc, "p", { class: "meta as-of", text: snapshot?.fetchedAt ? fetchedLabel(snapshot.fetchedAt) : "" }),
@@ -99,14 +88,13 @@ function statusLine(model, season) {
     return "No snapshot is loaded. Refresh does not contact ESPN.";
   }
   const count = snapshot.memberships?.[season]?.count;
-  const countText = count ? `${count} teams` : "partial snapshot";
-  const extra = model.session.rankingView === "fbs" ? " · sorted by recorded wins, not a power ranking" : "";
+  const countText = count ? `${count} teams on the service` : "partial snapshot";
   const storedCapture = snapshot.fixtureClass === "public-espn-capture" || snapshot.synthetic === true;
   if (!storedCapture && snapshot.source === "fbs-board-service") {
     const stale = snapshot.state === "stale_snapshot" ? "Stale cached service data. " : "";
-    return `${stale}Service · ${countText}${extra} · an in-progress game is shown only when ESPN marks it · a live clock was not measured`;
+    return `${stale}Service · ${countText} · an in-progress game is shown only when ESPN marks it · a live clock was not measured`;
   }
-  return `Snapshot · not a live scoreboard · ${countText}${extra}`;
+  return `Snapshot · not a live scoreboard · ${countText}`;
 }
 
 function renderBanner(doc, model) {
@@ -119,197 +107,48 @@ function renderBanner(doc, model) {
   return banner;
 }
 
-function renderToolbar(doc, model, season) {
-  const session = model.session;
-  const bar = el(doc, "div", { class: "toolbar" });
-  bar.append(selectControl(doc, {
-    id: "season",
-    label: "Season",
-    action: "season",
-    value: String(season),
-    options: seasonChoices(model.snapshot).map((year) => [String(year), String(year)]),
-  }));
-  bar.append(selectControl(doc, {
-    id: "ranking-view",
-    label: "Poll",
-    action: "ranking-view",
-    value: session.rankingView,
-    options: POLLS,
-  }));
-  const conferences = conferencesFor(model.snapshot, season);
-  const conference = conferences.includes(session.conference) ? session.conference : "all";
-  bar.append(selectControl(doc, {
-    id: "conference",
-    label: "Conference",
-    action: "conference",
-    value: conference,
-    options: [["all", "All conferences"], ...conferences.map((name) => [name, name])],
-  }));
-  const divisions = divisionsFor(model.snapshot, season, conference);
-  const division = divisions.includes(session.division) ? session.division : "all";
-  if (divisions.length) {
-    bar.append(selectControl(doc, {
-      id: "division",
-      label: "Division",
-      action: "division",
-      value: division,
-      options: [["all", "All divisions"], ...divisions.map((name) => [name, name])],
-    }));
-  }
-  const weeks = pollWeeks(model.snapshot, season);
-  if (weeks.length && session.rankingView !== "power") {
-    bar.append(selectControl(doc, {
-      id: "poll-week",
-      label: "Week",
-      action: "poll-week",
-      value: String(selectedPollWeek(model.snapshot, season, session.pollWeek)),
-      options: weeks.map((week) => [String(week), `Week ${week}`]),
-    }));
-  }
-  bar.append(el(doc, "button", {
-    type: "button",
-    id: "live-only",
-    "data-action": "live-only",
-    "aria-pressed": session.liveOnly ? "true" : "false",
-    text: "Live now",
-  }));
-  bar.append(el(doc, "button", { type: "button", id: "settings-open", "data-action": "settings", text: "Settings" }));
-  return bar;
-}
-
-function selectControl(doc, { id, label, action, value, options }) {
-  const select = el(doc, "select", { id, "data-action": action, "aria-label": label });
-  for (const [optionValue, optionLabel] of options) {
-    const option = el(doc, "option", { value: optionValue, text: optionLabel });
-    if (optionValue === value) option.selected = true;
-    select.append(option);
-  }
-  return select;
-}
-
 function filterStatus(model, season) {
-  const rows = visibleRows(model, season);
-  if (model.session.rankingView === "power") return "";
   if (!model.snapshot || model.snapshot.state === "disconnected") return "";
-  const total = sourceRows(model, season).length;
-  if (!total) return "";
-  return `Showing ${rows.length} of ${total}`;
+  const rows = displayRows(model, season);
+  if (!rows.length) return "";
+  return rows.length === 50 ? "50 teams" : `Showing ${rows.length}`;
 }
 
 function renderList(doc, model, season) {
   const wrap = el(doc, "div", {});
-  if (model.session.rankingView === "power") {
-    wrap.append(el(doc, "p", { id: "empty", class: "empty-state", "data-testid": "power-unavailable", text: "Power rankings are not available. The candidate weights are not approved, so this list is not a model ranking." }));
-    return wrap;
-  }
-  const rows = visibleRows(model, season);
   if (!model.snapshot || model.snapshot.state === "disconnected") {
     wrap.append(el(doc, "p", { id: "empty", class: "empty-state", text: "No snapshot is loaded." }));
     return wrap;
   }
-  const poll = currentPoll(model, season);
-  if (poll?.state === "not_released" || poll?.state === "wrong_week") {
-    wrap.append(el(doc, "p", { id: "empty", class: "empty-state", "data-testid": "poll-missing", text: poll.reason || "This poll is not in the snapshot for that week." }));
-    return wrap;
-  }
+  const rows = displayRows(model, season);
   if (!rows.length) {
     const text = model.session.liveOnly
       ? "No teams with an in-progress game match these filters."
-      : "No teams match those filters.";
+      : "No CFP or AP poll is in this snapshot.";
     wrap.append(el(doc, "p", { id: "empty", class: "empty-state", text }));
     return wrap;
   }
+  wrap.append(el(doc, "p", { id: "list-note", class: "meta", text: buildDisplayList(model.snapshot, season).note }));
   const list = el(doc, "div", { id: "list", role: "list", "aria-label": "College football rankings" });
   rows.forEach((row, index) => list.append(renderTeamRow(doc, model, season, row, index + 1)));
   wrap.append(list);
-  if (poll?.receivingVotes?.length && model.session.conference === "all" && !model.session.liveOnly && model.session.division === "all") {
-    wrap.append(el(doc, "h2", { class: "section-title", text: "Others receiving votes" }));
-    const votes = el(doc, "ul", { class: "votes" });
-    for (const vote of poll.receivingVotes) {
-      const bits = [vote.school];
-      if (vote.points != null) bits.push(`${vote.points} pts`);
-      if (vote.previousRank != null) bits.push(`prev ${vote.previousRank}`);
-      votes.append(el(doc, "li", { text: bits.join(" · ") }));
-    }
-    wrap.append(votes);
-  }
   return wrap;
 }
 
-function currentPoll(model, season) {
-  const family = model.session.rankingView;
-  if (!["ap", "coaches", "cfp"].includes(family)) return null;
-  const week = selectedPollWeek(model.snapshot, season, model.session.pollWeek);
-  return model.snapshot?.polls?.[season]?.[week]?.families?.[family] || null;
+function displayRows(model, season) {
+  const built = buildDisplayList(model.snapshot, season);
+  return built.rows.map((row) => ({
+    ...row,
+    extra: rowLabel(row),
+    live: teamIsLive(model.snapshot, season, row.providerId),
+  })).filter((row) => !model.session.liveOnly || row.live);
 }
 
-function recordParts(text) {
-  const match = /^(\d+)-(\d+)(?:-(\d+))?/.exec(text || "");
-  if (!match) return { wins: -1, losses: 99, ties: 0 };
-  return { wins: Number(match[1]), losses: Number(match[2]), ties: Number(match[3] || 0) };
-}
-
-function fbsRows(model, season) {
-  const rows = teamsFor(model.snapshot, season).map((team) => ({
-    providerId: team.providerId,
-    school: team.school,
-    conference: team.conference,
-    division: team.division,
-    logo: team.logo,
-    recordText: team.recordText,
-    extra: null,
-    live: teamIsLive(model.snapshot, season, team.providerId),
-  }));
-  rows.sort((a, b) => {
-    const left = recordParts(a.recordText);
-    const right = recordParts(b.recordText);
-    if (right.wins !== left.wins) return right.wins - left.wins;
-    if (left.losses !== right.losses) return left.losses - right.losses;
-    return String(a.school).localeCompare(String(b.school));
-  });
-  return rows.map((row, index) => ({ ...row, rank: index + 1 }));
-}
-
-function sourceRows(model, season) {
-  if (model.session.rankingView === "fbs") return fbsRows(model, season);
-  return pollRows(model, season);
-}
-
-function pollRows(model, season) {
-  const poll = currentPoll(model, season);
-  if (!poll || poll.state !== "available") return [];
-  return poll.ranks.map((rank) => {
-    const member = membershipTeam(model.snapshot, season, rank.providerId);
-    return {
-      providerId: rank.providerId,
-      school: rank.school,
-      conference: member?.conference || conferenceOf(model.snapshot, season, rank.providerId, rank.conference),
-      division: member?.division || null,
-      logo: rank.logo || member?.logo || null,
-      recordText: rank.recordSummary || member?.recordText || null,
-      rank: rank.rank,
-      extra: pollExtra(rank, poll),
-      live: teamIsLive(model.snapshot, season, rank.providerId),
-    };
-  });
-}
-
-function visibleRows(model, season) {
-  return sourceRows(model, season).filter((row) => {
-    if (model.session.liveOnly && !row.live) return false;
-    if (model.session.conference !== "all" && row.conference !== model.session.conference) return false;
-    if (model.session.division && model.session.division !== "all" && row.division !== model.session.division) return false;
-    return true;
-  });
-}
-
-function pollExtra(rank, poll) {
+function rowLabel(row) {
   const bits = [];
-  if (poll?.pointsUsed && rank.points != null) bits.push(`${rank.points} pts`);
-  if (poll?.votesUsed && rank.firstPlaceVotes != null) bits.push(`${rank.firstPlaceVotes} first-place`);
-  if (rank.previousRank != null) bits.push(`previous ${rank.previousRank}`);
-  else if (rank.previousUnranked) bits.push("previous not ranked");
-  if (rank.trend && rank.trend !== "-") bits.push(`ESPN trend ${rank.trend}`);
+  if (row.rank > 25 && row.sourceLabel) bits.push(row.sourceLabel);
+  if (row.previousRank != null) bits.push(`previous ${row.previousRank}`);
+  else if (row.previousUnranked) bits.push("previous not ranked");
   return bits.join(" · ");
 }
 
@@ -389,7 +228,15 @@ function renderPanel(doc, model, season, team) {
 
 function renderTeamGames(doc, model, season, team) {
   const games = gamesForTeam(model.snapshot, season, team.providerId);
-  if (!games.length) return el(doc, "p", { class: "empty", text: "No games for this team are in the loaded snapshot." });
+  if (!games.length) {
+    const schedule = model.snapshot?.teamSchedules?.[`${season}:${team.providerId}`];
+    const text = schedule
+      ? (schedule.reason || "ESPN returned no games for this season.")
+      : model.serviceConnected
+        ? "Checking ESPN for this team's games…"
+        : "No games for this team are in the loaded snapshot.";
+    return el(doc, "p", { class: "empty", text });
+  }
   const groups = [
     ["In progress", games.filter((game) => game.live), "live-title"],
     ["Postseason", games.filter((game) => !game.live && game.phase === "postseason"), "playoff-title"],
@@ -424,8 +271,11 @@ function renderTeamGame(doc, game, providerId) {
 
 function renderRoster(doc, model, season, team) {
   const roster = rosterFor(model.snapshot, season, team);
-  if (!roster || roster.state === "no_data" || roster.state === "season_mismatch") {
-    return el(doc, "p", { class: "empty", text: roster?.reason || "Roster is not in this snapshot." });
+  if (!roster) {
+    return el(doc, "p", { class: "empty", text: model.serviceConnected ? "Checking ESPN for this roster…" : "Roster is not in this snapshot." });
+  }
+  if (roster.state === "no_data" || roster.state === "season_mismatch" || !roster.players?.length) {
+    return el(doc, "p", { class: "empty", text: roster.reason || "ESPN returned no players for this season." });
   }
   const wrap = el(doc, "div", { class: "roster-slot" }, [
     el(doc, "p", { class: "roster-source", text: "ESPN roster. Starters are not labeled." }),
@@ -499,7 +349,9 @@ function renderStats(doc, model, season, team) {
     return wrap;
   }
   if (!block?.stats?.length) {
-    wrap.append(el(doc, "p", { class: "empty", text: "Team stats are not in this snapshot. A season that does not match the request is withheld." }));
+    const text = block?.reason
+      || (model.serviceConnected && !block ? "Checking ESPN for this team's stats…" : "ESPN returned no season stats for this team.");
+    wrap.append(el(doc, "p", { class: "empty", text }));
     return wrap;
   }
   const grid = el(doc, "div", { class: "stat-grid" });
@@ -515,7 +367,7 @@ function renderStats(doc, model, season, team) {
 
 function renderFooter(doc) {
   return el(doc, "footer", {}, [
-    el(doc, "p", { text: "AP, Coaches, and CFP show the returned top 25 only. Power rankings are not available." }),
+    el(doc, "p", { text: "Ranks 1–25 follow the CFP poll when ESPN has it, otherwise AP. Ranks 26–50 are labeled AP, Coaches, receiving votes, or best record. Power rankings are not available." }),
     el(doc, "p", {}, [
       "Data is unofficial and comes from ",
       el(doc, "a", { href: "https://www.espn.com/college-football/", rel: "noopener noreferrer", text: "ESPN" }),

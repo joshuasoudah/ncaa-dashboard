@@ -356,12 +356,36 @@ export function normalizeTeamStatistics(payload, { requestedSeason, teamId } = {
       reason: `Statistics requested for ${requestedSeason} came back with top-level season ${returned ?? "unknown"}. Figures are withheld rather than labeled as ${requestedSeason}.`,
     };
   }
+  const categories = payload?.results?.stats?.categories || [];
+  const stats = [];
+  for (const category of categories) {
+    const label = category.displayName || category.name || "Stat";
+    for (const stat of category.stats || []) {
+      if (stat?.displayValue == null || stat.displayValue === "") continue;
+      stats.push({
+        name: `${label} ${stat.abbreviation || stat.shortDisplayName || stat.name || ""}`.trim(),
+        display: String(stat.displayValue),
+        value: typeof stat.value === "number" ? stat.value : null,
+      });
+    }
+  }
+  if (!stats.length) {
+    return {
+      state: "no_data",
+      requestedSeason,
+      returnedSeason: returned,
+      teamId: teamId != null ? String(teamId) : null,
+      stats: [],
+      reason: "ESPN returned no season stats for this team.",
+    };
+  }
   return {
-    state: "unparsed",
+    state: "available",
     requestedSeason,
     returnedSeason: returned,
     teamId: teamId != null ? String(teamId) : null,
-    stats: [],
-    reason: "Season metadata matched, but this draft does not yet map category tables into the view.",
+    stats,
+    reason: null,
+    scope: { label: "Season totals for the requested year, as returned by ESPN." },
   };
 }

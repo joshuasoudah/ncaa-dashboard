@@ -120,6 +120,17 @@ test("rankings and roster normalizers reject substituted seasons", () => {
   const stats = normalizeTeamStatistics({ season: { year: 2026 }, requestedSeason: { year: 2025 }, results: { stats: { categories: [{ name: "passing" }] } } }, { requestedSeason: 2025 });
   assert.equal(stats.state, "season_mismatch");
   assert.equal(stats.stats.length, 0);
+  const mapped = normalizeTeamStatistics({
+    season: { year: 2026 },
+    requestedSeason: { year: 2026 },
+    results: { stats: { categories: [{ name: "passing", displayName: "Passing", stats: [{ abbreviation: "CMP%", displayValue: "69.4", value: 69.4 }, { abbreviation: "YDS", displayValue: "", value: null }] }] } },
+  }, { requestedSeason: 2026 });
+  assert.equal(mapped.state, "available");
+  assert.equal(mapped.stats.length, 1);
+  assert.equal(mapped.stats[0].display, "69.4");
+  const none = normalizeTeamStatistics({ season: { year: 2026 }, requestedSeason: { year: 2026 }, results: { stats: { categories: [] } } }, { requestedSeason: 2026 });
+  assert.equal(none.state, "no_data");
+  assert.match(none.reason, /ESPN returned no season stats/);
 });
 
 test("short cache coalesces concurrent ESPN reads and does not claim account quota", async () => {

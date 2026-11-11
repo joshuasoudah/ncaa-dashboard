@@ -81,8 +81,11 @@ export function gamesForBoard(snapshot, season, { phase, week, conference }) {
 }
 
 export function gamesForTeam(snapshot, season, providerId) {
-  return (snapshot?.games?.[season]?.games ?? []).filter((game) => {
-    return String(game.home.providerId) === String(providerId) || String(game.away.providerId) === String(providerId);
+  const key = `${season}:${providerId}`;
+  const personal = snapshot?.teamSchedules?.[key]?.games;
+  const source = Array.isArray(personal) ? personal : (snapshot?.games?.[season]?.games ?? []);
+  return source.filter((game) => {
+    return String(game.home?.providerId) === String(providerId) || String(game.away?.providerId) === String(providerId);
   });
 }
 

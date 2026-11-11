@@ -44,8 +44,10 @@ test("disconnected shell matches the standings toolbar and invents no teams", ()
   assert.equal(text.includes("Miami Hurricanes"), false);
   assert.equal(text.includes("North Fixture"), false);
   assert.equal(root.querySelector("#refresh").textContent, "Refresh now");
-  assert.equal(root.querySelector("#settings-open").textContent, "Settings");
-  assert.equal(root.querySelector("#live-only").getAttribute("aria-pressed"), "false");
+  assert.equal(root.querySelector("#theme-toggle").textContent, "Dark");
+  assert.equal(root.querySelector("#settings-open"), null);
+  assert.equal(root.querySelector("#live-only"), null);
+  assert.equal(root.querySelector("#ranking-view"), null);
   assert.equal(root.querySelector("[data-live], .live-pill, .live-dot.on"), null);
   assert.equal(root.querySelector("input[type=search]"), null);
 });
@@ -58,7 +60,7 @@ test("a configured service loads as FBS and does not say refresh skips ESPN", ()
   assert.match(text, /Loading/);
   assert.equal(text.includes("does not contact ESPN"), false);
   assert.equal(text.includes("Not connected"), false);
-  assert.equal(root.querySelector("#ranking-view").value, "fbs");
+  assert.equal(root.querySelector("#theme-toggle").textContent, "Dark");
   const loaded = structuredClone(capture);
   loaded.source = "fbs-board-service";
   loaded.fixtureClass = null;
@@ -72,23 +74,20 @@ test("a configured service loads as FBS and does not say refresh skips ESPN", ()
   assert.match(stale.textContent, /Stale cached service data/);
 });
 
-test("captured polls show 25 real teams, receiving votes, and no power ranks", () => {
+test("captured polls follow CFP order, cap at 50, and show no power ranks", () => {
   const session = createSession();
   session.rankingView = "power";
-  const power = mount(session, capture);
-  assert.match(power.querySelector("[data-testid=capture-banner]").textContent, /not a live scoreboard/i);
-  assert.equal(power.textContent.includes("Miami Hurricanes"), false);
-  session.rankingView = "ap";
   const ranked = mount(session, capture);
-  assert.match(ranked.textContent, /Miami Hurricanes/);
-  assert.match(ranked.textContent, /Showing 25 of 25/);
-  assert.match(ranked.textContent, /Others receiving votes/);
-  assert.match(ranked.textContent, /previous 1/);
+  assert.match(ranked.querySelector("[data-testid=capture-banner]").textContent, /not a live scoreboard/i);
+  const schools = [...ranked.querySelectorAll(".team .name")].map((node) => node.textContent);
+  assert.equal(schools.length, 50);
+  assert.equal(schools[0], "Miami Hurricanes");
+  assert.match(ranked.textContent, /1–25 CFP/);
+  assert.match(ranked.textContent, /Not a power ranking/);
+  assert.match(ranked.textContent, /50 teams/);
   assert.equal(ranked.textContent.includes("FCS Coaches"), false);
-  session.rankingView = "cfp";
-  const cfp = mount(session, capture);
-  assert.match(cfp.textContent, /previous not ranked/);
-  assert.equal(cfp.textContent.includes("0 pts"), false);
+  assert.equal(ranked.textContent.includes("0 pts"), false);
+  assert.equal(ranked.querySelector("[data-testid=power-unavailable]"), null);
 });
 
 test("Alabama roster shows ESPN class and no starter tag", () => {
@@ -104,7 +103,21 @@ test("Alabama roster shows ESPN class and no starter tag", () => {
   assert.equal(root.querySelectorAll(".tabs .tab").length >= 3, true);
   session.teamTab = "stats";
   const stats = mount(session, capture);
-  assert.match(stats.textContent, /withheld/);
+  assert.match(stats.textContent, /ESPN returned no season stats for this team/);
+});
+
+test("an empty ESPN tab says so in one line", () => {
+  const session = createSession();
+  session.openTeamId = "333";
+  session.teamTab = "games";
+  const copy = structuredClone(capture);
+  copy.teamSchedules = { "2026:333": { games: [], state: "empty", reason: "ESPN returned no games for this season." } };
+  copy.rosters = { ...(copy.rosters || {}), "2026:333": { state: "no_data", players: [], reason: "ESPN returned no players for this season." } };
+  const games = mount(session, copy);
+  assert.match(games.textContent, /ESPN returned no games for this season/);
+  session.teamTab = "roster";
+  const roster = mount(session, copy);
+  assert.match(roster.textContent, /ESPN returned no players for this season/);
 });
 
 test("live filter on a final capture does not invent a live game", () => {
@@ -167,13 +180,14 @@ test("reopen closes panels and returns filters to All without dropping the poll"
   assert.equal(root.querySelector(".panel"), null);
 });
 
-test("the FBS list is every stored team sorted by record, not a power ranking", () => {
+test("the only list is the 50-team board, not a power ranking", () => {
   const session = createSession();
-  session.rankingView = "fbs";
   const root = mount(session, capture);
-  assert.match(root.textContent, /Showing 138 of 138/);
-  assert.match(root.textContent, /not a power ranking/);
-  assert.equal(root.querySelector("[data-testid=power-unavailable]"), null);
+  assert.equal(root.querySelectorAll(".team").length, 50);
+  assert.match(root.textContent, /Not a power ranking/);
+  assert.equal(root.querySelector("#conference"), null);
+  assert.equal(root.querySelector("#poll-week"), null);
+  assert.equal(root.querySelector("select"), null);
 });
 
 test("refresh keeps the open team", () => {

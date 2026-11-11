@@ -124,13 +124,19 @@ function currentSeason() {
   return resolveSeason(session, snapshot, DEFAULT_SEASON);
 }
 
-function currentWeek() {
-  if (session.pollWeek && session.pollWeek !== "latest") {
-    const week = Number(session.pollWeek);
-    if (week >= 1 && week <= 20) return week;
+function knownWeeks() {
+  return Object.keys(snapshot?.polls?.[currentSeason()] || {}).map(Number).filter((week) => week >= 1 && week <= 20);
+}
+
+async function resolveWeek(manual) {
+  const known = knownWeeks();
+  if (!manual && known.length && snapshot?.source === "fbs-board-service") return Math.max(...known);
+  if (serviceBase) {
+    const probe = await getView(serviceBase, "v1/rankings", { season: currentSeason(), week: 20, seasontype: 2 });
+    const echoed = Number(probe.body?.week);
+    if (echoed >= 1 && echoed <= 20) return echoed;
   }
-  const weeks = Object.keys(snapshot?.polls?.[currentSeason()] || {}).map(Number).filter((week) => week >= 1);
-  return weeks.length ? Math.max(...weeks) : 10;
+  return known.length ? Math.max(...known) : null;
 }
 
 async function onRefresh(manual = true) {
@@ -147,9 +153,16 @@ async function onRefresh(manual = true) {
   const keptTeam = session.openTeamId;
   const keptTab = session.teamTab;
   try {
+    const week = await resolveWeek(manual);
+    if (!week) {
+      bannerText = "The current week could not be read. No scores were invented.";
+      status = "Refresh failed. This page did not invent scores.";
+      render();
+      return;
+    }
     const result = await getView(serviceBase, "v1/board", {
       season: currentSeason(),
-      week: currentWeek(),
+      week,
       seasontype: 2,
     });
     const accepted = acceptRenderable(result.body);
@@ -170,6 +183,33 @@ async function onRefresh(manual = true) {
     status = "Refresh failed. This page did not invent scores.";
   }
   render();
+  if (session.openTeamId && session.teamTab === "games") ensureSchedule(session.openTeamId);
+  if (session.openTeamId && (session.teamTab === "roster" || session.teamTab === "stats")) ensureDetail(session.teamTab);
+}
+
+async function ensureSchedule(id) {
+  if (!serviceBase || !snapshot || !id) return;
+  const season = currentSeason();
+  const key = `${season}:${id}`;
+  if (snapshot.teamSchedules?.[key]) return;
+  const regular = await getView(serviceBase, "v1/schedule", { team: id, season, seasontype: 2 });
+  const games = regular.ok && Array.isArray(regular.body?.games) ? regular.body.games.slice() : [];
+  if (regular.ok) {
+    const postseason = await getView(serviceBase, "v1/schedule", { team: id, season, seasontype: 3 });
+    if (postseason.ok && Array.isArray(postseason.body?.games)) {
+      const seen = new Set(games.map((game) => game.providerId));
+      for (const game of postseason.body.games) {
+        if (!seen.has(game.providerId)) games.push(game);
+      }
+    }
+  }
+  snapshot.teamSchedules = {
+    ...(snapshot.teamSchedules || {}),
+    [key]: regular.ok
+      ? { games, state: games.length ? "available" : "empty", reason: games.length ? null : "ESPN returned no games for this season." }
+      : { games: [], state: "empty", reason: "ESPN returned no games for this season." },
+  };
+  if (String(session.openTeamId) === String(id)) render();
 }
 
 async function ensureDetail(kind) {
@@ -237,10 +277,14 @@ document.getElementById("app").addEventListener("click", (event) => {
     const same = String(session.openTeamId) === String(value);
     resetPanels();
     session.openTeamId = same ? null : value;
+    render();
+    if (session.openTeamId) ensureSchedule(session.openTeamId);
+    return;
   } else if (action === "team-tab") {
     session.teamTab = value;
     session.openPlayerId = null;
     render();
+    if (value === "games") ensureSchedule(session.openTeamId);
     if (value === "roster" || value === "stats") ensureDetail(value);
     return;
   } else if (action === "toggle-player") {
