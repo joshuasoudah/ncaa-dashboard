@@ -1,6 +1,6 @@
 {
-  "name": "FBS Board",
-  "short_name": "FBS Board",
+  "name": "NCAA Rankings",
+  "short_name": "NCAA Rankings",
   "description": "Independent college football snapshot companion. Not affiliated with the NCAA or the College Football Playoff.",
   "start_url": "./",
   "scope": "./",

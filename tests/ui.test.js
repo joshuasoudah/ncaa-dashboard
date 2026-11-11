@@ -38,7 +38,7 @@ test("disconnected shell matches the standings toolbar and invents no teams", ()
   assert.equal(session.rankingView, "fbs");
   const root = mount(session, null);
   const text = root.textContent;
-  assert.match(text, /FBS Board/);
+  assert.match(text, /NCAA Rankings/);
   assert.match(text, /Not connected/);
   assert.match(text, /does not contact ESPN/);
   assert.equal(text.includes("Miami Hurricanes"), false);
@@ -299,7 +299,12 @@ test("shell uses the standings navy and red and does not call ESPN itself", () =
   assert.match(css, /--nfl-navy:\s*#013369/);
   assert.match(css, /--nfl-red:\s*#D50A0A/);
   assert.match(css, /var\(--stroke/);
-  assert.match(html, /FBS Board/);
+  assert.match(html, /<title>NCAA Rankings<\/title>/);
+  assert.match(html, /apple-mobile-web-app-title" content="NCAA Rankings"/);
+  assert.match(html, /<h1>NCAA Rankings<\/h1>/);
+  const manifest = JSON.parse(fs.readFileSync(new URL("../manifest.webmanifest", import.meta.url), "utf8"));
+  assert.equal(manifest.name, "NCAA Rankings");
+  assert.equal(manifest.short_name, "NCAA Rankings");
   assert.equal(html.includes("free data plan"), false);
   const config = fs.readFileSync(new URL("../fbs-config.js", import.meta.url), "utf8");
   assert.match(config, /https:\/\/fbs-board-data\.josh-soudah\.workers\.dev/);

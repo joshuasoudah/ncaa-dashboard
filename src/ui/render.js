@@ -38,7 +38,7 @@ function renderSticky(doc, model, season) {
     el(doc, "header", { class: "scoreboard" }, [
       el(doc, "div", { class: "brand" }, [
         el(doc, "div", {}, [
-          el(doc, "h1", { text: "FBS Board" }),
+          el(doc, "h1", { text: "NCAA Rankings" }),
           el(doc, "p", { id: "season", text: seasonLine(model, season) }),
           el(doc, "p", { class: "live-state", id: "live-state", "aria-label": polling ? "Automatic refresh is on" : "Snapshot only. Automatic refresh is not contacting a scoreboard." }, [
             el(doc, "span", { class: polling ? "live-dot on" : "live-dot", "aria-hidden": "true" }),
