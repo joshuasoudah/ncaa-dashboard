@@ -90,6 +90,83 @@ test("captured polls follow CFP order, cap at 50, and show no power ranks", () =
   assert.equal(ranked.querySelector("[data-testid=power-unavailable]"), null);
 });
 
+test("the games tab uses the NFL score lines", () => {
+  const session = createSession();
+  session.openTeamId = "333";
+  session.teamTab = "games";
+  const copy = structuredClone(capture);
+  copy.games["2026"].games.push({
+    providerId: "loss-only",
+    season: 2026,
+    week: 9,
+    phase: "regular",
+    startDate: "2026-10-31T23:30:00.000Z",
+    status: "final",
+    statusLabel: "Final",
+    live: false,
+    home: { providerId: "333", name: "Alabama Crimson Tide", abbreviation: "ALA", points: 10, logo: "https://a.espncdn.com/i/teamlogos/ncaa/500/333.png" },
+    away: { providerId: "61", name: "Georgia Bulldogs", abbreviation: "UGA", points: 17, logo: "https://a.espncdn.com/i/teamlogos/ncaa/500/61.png" },
+  }, {
+    providerId: "next-only",
+    season: 2026,
+    week: 12,
+    phase: "regular",
+    startDate: "2026-11-21T20:00:00.000Z",
+    status: "scheduled",
+    statusLabel: "Scheduled",
+    live: false,
+    home: { providerId: "333", name: "Alabama Crimson Tide", abbreviation: "ALA", points: null, logo: "https://a.espncdn.com/i/teamlogos/ncaa/500/333.png" },
+    away: { providerId: "99", name: "LSU Tigers", abbreviation: "LSU", points: null, logo: "https://a.espncdn.com/i/teamlogos/ncaa/500/99.png" },
+  }, {
+    providerId: "live-only",
+    season: 2026,
+    week: 11,
+    phase: "regular",
+    startDate: "2026-11-14T20:00:00.000Z",
+    status: "in_progress",
+    statusLabel: "2nd 8:21",
+    live: true,
+    clockLabel: "Q2 8:21",
+    home: { providerId: "333", name: "Alabama Crimson Tide", abbreviation: "ALA", points: 7, logo: "https://a.espncdn.com/i/teamlogos/ncaa/500/333.png" },
+    away: { providerId: "26", name: "UCLA Bruins", abbreviation: "UCLA", points: 10, logo: "https://a.espncdn.com/i/teamlogos/ncaa/500/26.png" },
+  });
+  const root = mount(session, copy);
+  assert.match(root.textContent, /COMPLETED REGULAR-SEASON GAMES/);
+  assert.match(root.textContent, /UPCOMING REGULAR-SEASON GAMES/);
+  assert.match(root.textContent, /IN PROGRESS/);
+  const win = [...root.querySelectorAll(".completed-sec .game")].find((row) => row.textContent.includes("@ LSU Tigers"));
+  assert.ok(win);
+  assert.equal(win.querySelector(".loc").textContent, "AWAY");
+  assert.equal(win.querySelector(".my-abbr").textContent, "ALA");
+  assert.equal(win.querySelector(".my-pts").textContent, "31");
+  assert.equal(win.querySelector(".result").textContent, "W");
+  assert.equal(win.querySelector(".opp-abbr").textContent, "LSU");
+  assert.equal(win.querySelector(".opp-pts").textContent, "13");
+  assert.equal(win.querySelector(".result-pad").hidden, false);
+  const loss = [...root.querySelectorAll(".completed-sec .game")].find((row) => row.textContent.includes("vs Georgia Bulldogs"));
+  assert.equal(loss.querySelector(".loc").textContent, "HOME");
+  assert.equal(loss.querySelector(".result").className, "result L");
+  const logos = win.querySelectorAll(".score-logo");
+  assert.equal(logos.length, 2);
+  for (const logo of logos) {
+    assert.equal(logo.getAttribute("loading"), "lazy");
+    assert.equal(logo.getAttribute("width"), "15");
+    assert.equal(logo.getAttribute("height"), "15");
+    assert.match(logo.getAttribute("src"), /^https:\/\/a\.espncdn\.com\//);
+  }
+  const upcoming = root.querySelector(".upcoming-sec .game");
+  assert.equal(upcoming.querySelector(".badge").textContent, "SCHEDULED");
+  assert.equal(upcoming.querySelector(".scorebox").hidden, true);
+  const live = root.querySelector(".live-sec .game");
+  assert.match(live.className, /is-live/);
+  assert.equal(live.querySelector(".badge").textContent, "● LIVE");
+  assert.equal(live.querySelector(".result").hidden, true);
+  assert.equal(live.querySelector(".clock").textContent, "Q2 8:21");
+  const css = fs.readFileSync(new URL("../styles.css", import.meta.url), "utf8");
+  assert.match(css, /\.game\.is-live \{[^}]*var\(--playing\)/);
+  assert.match(css, /\.game\.is-live \.badge \{[^}]*var\(--playing\)/);
+});
+
 test("Alabama roster shows ESPN class and no starter tag", () => {
   const session = createSession();
   session.rankingView = "ap";

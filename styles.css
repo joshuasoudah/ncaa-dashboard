@@ -466,7 +466,7 @@ html[data-theme="light"] .tab:not([aria-selected="true"]) {
 }
 .section-title.playoff-title { color: var(--gold); }
 .section-title.upcoming-title { color: var(--accent); }
-.section-title.live-title { color: var(--stroke, var(--accent)); }
+.section-title.live-title { color: var(--playing-text); }
 .game {
   display: flex;
   justify-content: space-between;
@@ -480,12 +480,12 @@ html[data-theme="light"] .tab:not([aria-selected="true"]) {
 .game.upcoming, .game.playoff, .game.is-live { border: 1px solid var(--line); border-radius: 12px; margin: 6px 0; padding: 10px; }
 .game.upcoming { background: color-mix(in srgb, var(--accent) 12%, transparent); }
 .game.playoff { background: color-mix(in srgb, #e9b96e 16%, transparent); }
-.game.is-live { background: color-mix(in srgb, var(--stroke, var(--accent)) 16%, var(--card)); border-color: var(--stroke, var(--line)); }
+.game.is-live { background: color-mix(in srgb, var(--playing) 16%, var(--card)); border-color: var(--playing); }
 .game-info { min-width: 0; }
 .game-meta, .roster-source, .player-meta, .empty { color: var(--muted); font-size: 12px; }
 .game-score { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; text-align: right; flex: none; }
 .badge { font-size: 10px; font-weight: 800; letter-spacing: .04em; color: var(--accent); }
-.game.is-live .badge { color: #fff; background: var(--stroke, var(--nfl-navy)); border-radius: 999px; padding: 2px 6px; }
+.game.is-live .badge { color: var(--playing-ink); background: var(--playing); border-radius: 999px; padding: 2px 6px; }
 .game.playoff .badge { color: var(--gold); }
 .W { color: var(--text); }
 .L { color: var(--bad); }

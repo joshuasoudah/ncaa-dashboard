@@ -8,8 +8,9 @@ import {
   fetchedLabel,
   gamesForTeam,
   measurement,
-  opponentView,
+  membershipTeam,
   playerStatsFor,
+  pointsText,
   rosterFor,
   selectedPollWeek,
   teamStatsFor,
@@ -237,36 +238,113 @@ function renderTeamGames(doc, model, season, team) {
         : "No games for this team are in the loaded snapshot.";
     return el(doc, "p", { class: "empty", text });
   }
+  const byDate = (a, b) => Date.parse(a.startDate || "") - Date.parse(b.startDate || "");
   const groups = [
-    ["In progress", games.filter((game) => game.live), "live-title"],
-    ["Postseason", games.filter((game) => !game.live && game.phase === "postseason"), "playoff-title"],
-    ["Upcoming", games.filter((game) => !game.live && game.status === "scheduled"), "upcoming-title"],
-    ["Completed", games.filter((game) => !game.live && game.phase !== "postseason" && game.status !== "scheduled"), ""],
+    ["live-sec", "IN PROGRESS", "live-title", games.filter((game) => game.live).sort(byDate), "live"],
+    ["playoff-sec", "PLAYOFF GAMES", "playoff-title", games.filter((game) => game.phase === "postseason" && !game.live).sort(byDate), "playoff"],
+    ["upcoming-sec", "UPCOMING REGULAR-SEASON GAMES", "upcoming-title", games.filter((game) => game.phase === "regular" && game.status !== "final" && !game.live).sort(byDate), "upcoming"],
+    ["completed-sec", "COMPLETED REGULAR-SEASON GAMES", "", games.filter((game) => game.phase === "regular" && game.status === "final" && !game.live).sort((a, b) => byDate(b, a)), "completed"],
   ];
   const mount = el(doc, "div", { class: "games-mount" });
-  for (const [label, list, titleClass] of groups) {
-    if (!list.length) continue;
-    mount.append(el(doc, "h3", { class: titleClass ? `section-title ${titleClass}` : "section-title", text: label }));
-    for (const game of list) mount.append(renderTeamGame(doc, game, team.providerId));
+  for (const [sectionClass, title, titleClass, list, kind] of groups) {
+    const body = el(doc, "div", { class: "section-body" });
+    if (kind === "completed" && !list.length) {
+      body.append(el(doc, "div", { class: "empty", text: "No completed regular-season games yet." }));
+    } else {
+      for (const game of list) body.append(renderTeamGame(doc, model, season, game, team.providerId, kind));
+    }
+    const section = el(doc, "div", { class: `game-section ${sectionClass}`, hidden: kind !== "completed" && !list.length }, [
+      el(doc, "div", { class: titleClass ? `section-title ${titleClass}` : "section-title", text: title }),
+      body,
+    ]);
+    mount.append(section);
   }
   return mount;
 }
 
-function renderTeamGame(doc, game, providerId) {
-  const view = opponentView(game, providerId);
-  const row = el(doc, "article", { class: game.live ? "game is-live" : game.phase === "postseason" ? "game playoff" : game.status === "scheduled" ? "game upcoming" : "game" });
-  row.style.setProperty("--stroke", strokeFor(view.opponent).color);
-  row.append(
+function markedSide(snapshot, season, side) {
+  const member = membershipTeam(snapshot, season, side?.providerId);
+  return {
+    name: side?.name || member?.school || "Opponent unavailable",
+    abbreviation: side?.abbreviation || member?.abbreviation || null,
+    logo: side?.logo || member?.logo || null,
+    points: side?.points ?? null,
+  };
+}
+
+function resultMark(us, them) {
+  if (us == null || them == null) return null;
+  if (us > them) return "W";
+  if (us < them) return "L";
+  return "T";
+}
+
+function shortDate(iso) {
+  const date = new Date(iso);
+  if (!iso || Number.isNaN(date.getTime())) return "TBD";
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/Chicago" });
+}
+
+function kickoffClock(game) {
+  if (!game.startDate) return "Kickoff TBD";
+  const date = new Date(game.startDate);
+  if (Number.isNaN(date.getTime())) return "Kickoff TBD";
+  return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/Chicago", timeZoneName: "short" });
+}
+
+function scoreLogo(doc, src, className) {
+  const img = el(doc, "img", {
+    class: `score-logo ${className}`,
+    alt: "",
+    width: "15",
+    height: "15",
+    decoding: "async",
+    loading: "lazy",
+  });
+  if (src && /^https?:\/\//i.test(src)) img.setAttribute("src", src);
+  else img.hidden = true;
+  return el(doc, "span", { class: "logo-slot" }, [img]);
+}
+
+function renderScorebox(doc, mine, theirs, result) {
+  return el(doc, "span", { class: result ? "scorebox has-result" : "scorebox" }, [
+    scoreLogo(doc, mine.logo, "my-logo"),
+    el(doc, "span", { class: "abbr my-abbr", text: mine.abbreviation || EM_DASH }),
+    el(doc, "span", { class: "pts my-pts", text: pointsText(mine.points) }),
+    el(doc, "span", { class: result ? `result ${result}` : "result", text: result || "", hidden: !result }),
+    scoreLogo(doc, theirs.logo, "opp-logo"),
+    el(doc, "span", { class: "abbr opp-abbr", text: theirs.abbreviation || EM_DASH }),
+    el(doc, "span", { class: "pts opp-pts", text: pointsText(theirs.points) }),
+    el(doc, "span", { class: "result-pad", hidden: !result }),
+  ]);
+}
+
+function renderTeamGame(doc, model, season, game, providerId, kind) {
+  const away = String(game.away?.providerId) === String(providerId);
+  const mine = markedSide(model.snapshot, season, away ? game.away : game.home);
+  const theirs = markedSide(model.snapshot, season, away ? game.home : game.away);
+  const completed = game.status === "final" && !game.live;
+  const result = completed ? resultMark(mine.points, theirs.points) : null;
+  const kindClass = kind === "playoff" ? "playoff" : kind === "upcoming" ? "upcoming" : "";
+  const showScore = completed || game.live;
+  const badgeText = game.live ? "● LIVE" : game.status === "scheduled" ? "SCHEDULED" : (game.statusLabel || "SCHEDULED");
+  return el(doc, "div", { class: `game${kindClass ? ` ${kindClass}` : ""}${game.live ? " is-live" : ""}` }, [
     el(doc, "div", { class: "game-info" }, [
-      el(doc, "p", { class: "name", text: `${view.outcome ? view.outcome + " " : ""}${view.opponent}` }),
-      el(doc, "p", { class: "game-meta", text: `${view.site} · ${game.kickoffLabel || "Time not stored"} · ${game.phase}${game.notes ? ` · ${game.notes}` : ""}` }),
+      el(doc, "div", { class: "game-line" }, [
+        el(doc, "span", { class: "when", text: shortDate(game.startDate) }),
+        " · ",
+        el(doc, "strong", { class: "loc", text: away ? "AWAY" : "HOME" }),
+        " · ",
+        el(doc, "span", { class: "opp", text: `${away ? "@" : "vs"} ${theirs.name}` }),
+      ]),
+      el(doc, "div", { class: "game-meta round", text: game.notes || "Playoffs", hidden: kind !== "playoff" }),
     ]),
     el(doc, "div", { class: "game-score" }, [
-      el(doc, "span", { class: "badge", text: game.live ? (game.clockLabel || "Live") : game.statusLabel }),
-      el(doc, "span", { class: "pts", text: `${view.us}–${view.them}` }),
+      el(doc, "span", { class: "badge", text: badgeText, hidden: completed }),
+      showScore ? renderScorebox(doc, mine, theirs, result) : el(doc, "span", { class: "scorebox", hidden: true }),
+      el(doc, "div", { class: "game-meta clock", text: game.live ? (game.clockLabel || "") : kickoffClock(game), hidden: completed }),
     ]),
-  );
-  return row;
+  ]);
 }
 
 function renderRoster(doc, model, season, team) {
