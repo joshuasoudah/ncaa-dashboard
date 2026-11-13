@@ -5,7 +5,7 @@ import { interpretStat } from "../src/normalize/common.js";
 import { normalizeMembership } from "../src/normalize/membership.js";
 import { deriveGameStatus, normalizeGames, recordFromGames } from "../src/normalize/games.js";
 import { classifyPollName, normalizePollWeek } from "../src/normalize/polls.js";
-import { normalizeRoster } from "../src/normalize/roster.js";
+import { groupRoster, normalizeRoster } from "../src/normalize/roster.js";
 import { normalizePlayerSeasonStats, normalizeTeamSeasonStats } from "../src/normalize/stats.js";
 import { acceptRenderable, buildSnapshot } from "../src/normalize/snapshot.js";
 
@@ -125,6 +125,40 @@ test("roster omits class and private geography", () => {
   assert.equal(cy.weightPounds, 0);
   assert.equal(cy.jersey, 0);
   assert.equal(JSON.stringify(roster).includes("Freshman"), false);
+});
+
+test("roster groups start at quarterback and keep fullbacks after running backs", () => {
+  const grouped = groupRoster([
+    { lastName: "Safety", position: "FS", jersey: 1 },
+    { lastName: "Guard", position: "G", jersey: 70 },
+    { lastName: "Corner", position: "CB", jersey: 2 },
+    { lastName: "Unknown", position: "XYZ", jersey: 99 },
+    { lastName: "Receiver", position: "WR", jersey: 11 },
+    { lastName: "Back", position: "RB", jersey: 5 },
+    { lastName: "Fullback", position: "FB", jersey: 44 },
+    { lastName: "Tackle", position: "OT", jersey: 77 },
+    { lastName: "Quarterback", position: "QB", jersey: 12 },
+    { lastName: "NoPos", position: "", jersey: 3 },
+    { lastName: "Punter", position: "P", jersey: 8 },
+    { lastName: "End", position: "TE", jersey: 88 },
+  ]);
+  assert.deepEqual(grouped.map((group) => group.label), [
+    "Quarterbacks",
+    "Running backs",
+    "Fullbacks",
+    "Wide receivers",
+    "Tight ends",
+    "Offensive line",
+    "Cornerbacks",
+    "Safeties",
+    "Special teams",
+    "Other",
+    "Unlisted position",
+  ]);
+  assert.deepEqual(
+    grouped.find((group) => group.label === "Offensive line").players.map((player) => player.position),
+    ["OT", "G"],
+  );
 });
 
 test("season stats quarantine the wrong year and describe postseason scope", () => {

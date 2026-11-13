@@ -2,14 +2,16 @@ import { nullableNumber, nullableText } from "./common.js";
 
 const GROUP_ORDER = [
   ["Quarterbacks", ["QB"]],
-  ["Running backs", ["RB", "FB"]],
-  ["Receivers", ["WR"]],
+  ["Running backs", ["RB", "HB", "TB"]],
+  ["Fullbacks", ["FB"]],
+  ["Wide receivers", ["WR"]],
   ["Tight ends", ["TE"]],
-  ["Offensive line", ["OL", "OT", "OG", "C", "IOL"]],
-  ["Defensive line", ["DL", "DE", "DT", "NT", "EDGE"]],
-  ["Linebackers", ["LB", "ILB", "OLB", "MLB"]],
-  ["Defensive backs", ["DB", "CB", "S", "FS", "SS", "NB"]],
-  ["Specialists", ["K", "P", "LS", "PK", "HOLDER"]],
+  ["Offensive line", ["OT", "T", "G", "OG", "C", "OL", "IOL", "LT", "RT", "LG", "RG", "OC"]],
+  ["Defensive line", ["DE", "DT", "NT", "DL", "EDGE"]],
+  ["Linebackers", ["LB", "OLB", "ILB", "MLB"]],
+  ["Cornerbacks", ["CB", "NB", "NCB"]],
+  ["Safeties", ["S", "FS", "SS", "DB"]],
+  ["Special teams", ["PK", "K", "P", "LS", "HOLDER"]],
   ["Athletes", ["ATH"]],
 ];
 
@@ -53,6 +55,7 @@ export function normalizeRoster(rows, { requestedSeason, school, coverage = "par
 
 export function groupRoster(players) {
   const buckets = new Map(GROUP_ORDER.map(([label]) => [label, []]));
+  const codesByLabel = new Map(GROUP_ORDER);
   buckets.set("Other", []);
   buckets.set("Unlisted position", []);
   for (const player of players ?? []) {
@@ -66,13 +69,21 @@ export function groupRoster(players) {
   }
   return [...buckets.entries()]
     .filter(([, list]) => list.length)
-    .map(([label, list]) => ({
-      label,
-      players: list.slice().sort((a, b) => {
-        const aj = a.jersey ?? 9999;
-        const bj = b.jersey ?? 9999;
-        if (aj !== bj) return aj - bj;
-        return `${a.lastName}`.localeCompare(`${b.lastName}`);
-      }),
-    }));
+    .map(([label, list]) => {
+      const codes = codesByLabel.get(label) || [];
+      return {
+        label,
+        players: list.slice().sort((a, b) => {
+          const ap = codes.indexOf((a.position || "").toUpperCase());
+          const bp = codes.indexOf((b.position || "").toUpperCase());
+          const ai = ap === -1 ? 99 : ap;
+          const bi = bp === -1 ? 99 : bp;
+          if (ai !== bi) return ai - bi;
+          const aj = a.jersey ?? 9999;
+          const bj = b.jersey ?? 9999;
+          if (aj !== bj) return aj - bj;
+          return `${a.lastName}`.localeCompare(`${b.lastName}`);
+        }),
+      };
+    });
 }

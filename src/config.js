@@ -4,7 +4,7 @@ export const APP_TAGLINE = "College football companion";
 export const STORAGE_PREFIX = "fbs-board-";
 export const PREF_KEY = "fbs-board-prefs-v1";
 export const CACHE_PREFIX = "fbs-board-";
-export const SHELL_CACHE = "fbs-board-shell-v1";
+export const SHELL_CACHE = "fbs-board-shell-v2";
 export const TIME_ZONE = "America/Chicago";
 
 /**
