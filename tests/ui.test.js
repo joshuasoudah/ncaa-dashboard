@@ -305,6 +305,14 @@ test("shell uses the standings navy and red and does not call ESPN itself", () =
   const manifest = JSON.parse(fs.readFileSync(new URL("../manifest.webmanifest", import.meta.url), "utf8"));
   assert.equal(manifest.name, "NCAA Rankings");
   assert.equal(manifest.short_name, "NCAA Rankings");
+  assert.match(html, /rel="apple-touch-icon" href="apple-touch-icon\.png"/);
+  assert.equal(html.includes("icon.svg"), false);
+  assert.equal(manifest.icons.some((icon) => icon.src === "icon.svg"), false);
+  assert.deepEqual(manifest.icons.map((icon) => icon.src), [
+    "icon-192.png",
+    "icon-512.png",
+    "icon-512-maskable.png",
+  ]);
   assert.equal(html.includes("free data plan"), false);
   const config = fs.readFileSync(new URL("../fbs-config.js", import.meta.url), "utf8");
   assert.match(config, /https:\/\/fbs-board-data\.josh-soudah\.workers\.dev/);
